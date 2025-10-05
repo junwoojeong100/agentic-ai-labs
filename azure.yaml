@@ -1,0 +1,17 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: ai-foundry-agent-lab
+metadata:
+  template: ai-foundry-agent-lab@0.0.1-beta
+
+# Note: This project uses 'azd provision' for infrastructure deployment only.
+# Container deployments are handled manually via notebooks (Lab 3).
+# Services section is not needed for provision-only workflow.
+
+infra:
+  path: ./infra
+  module: main
+  parameters:
+    environmentName: ${AZURE_ENV_NAME}
+    location: ${AZURE_LOCATION}
+    enableSearch: true

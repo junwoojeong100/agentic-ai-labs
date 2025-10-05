@@ -1,0 +1,12 @@
+{
+  "resourcesResourceGroups": "rg-",
+  "keyVaultVaults": "kv-",
+  "storageStorageAccounts": "st",
+  "containerRegistryRegistries": "cr",
+  "operationalInsightsWorkspaces": "log-",
+  "insightsComponents": "appi-",
+  "cognitiveServicesAccounts": "cog-",
+  "searchSearchServices": "srch-",
+  "appManagedEnvironments": "cae-",
+  "appContainerApps": "ca-"
+}

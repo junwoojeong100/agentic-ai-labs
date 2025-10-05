@@ -1,0 +1,974 @@
+[
+  {
+    "id": "doc-01-00",
+    "title": "에이전트 개발 기초 - 개요",
+    "content": "## Azure AI Agent 소개\n\nAzure AI 에이전트는 Azure AI Foundry 플랫폼에서 구축된 지능형 시스템으로, 사용자를 대신하여 이해하고, 추론하고, 행동할 수 있습니다. 이러한 에이전트는 고급 언어 모델을 활용하며 복잡한 작업을 수행하기 위해 다양한 도구와 지식 소스로 구성할 수 있습니다.",
+    "category": "에이전트 개발 기초",
+    "section": "1",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-01-01",
+    "title": "에이전트 개발 기초 - 핵심 개념",
+    "content": "### 에이전트 아키텍처\nAzure AI 에이전트는 다음으로 구성됩니다:\n- **Instructions**: 에이전트의 행동과 성격을 정의하는 시스템 프롬프트\n- **Model**: 기본 언어 모델 (예: GPT-4o)\n- **Tools**: 에이전트가 작업을 수행하기 위해 호출할 수 있는 함수\n- **Knowledge**: 에이전트가 참조할 수 있는 정보 소스\n\n### 에이전트 유형\n1. **Main Orchestrator Agents**: 여러 전문 에이전트를 조정\n2. **Specialized Agents**: 특정 도메인이나 작업에 집중\n3. **Connected Agents**: 복잡한 문제를 해결하기 위해 함께 작동하는 에이전트",
+    "category": "에이전트 개발 기초",
+    "section": "1",
+    "subsection": "핵심 개념",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-01-02",
+    "title": "에이전트 개발 기초 - Azure AI Foundry SDK로 에이전트 구축",
+    "content": "Azure AI Foundry SDK는 에이전트를 생성하고 관리하기 위한 Python 기반 인터페이스를 제공합니다:\n\n```python\nfrom azure.ai.projects import AIProjectClient\nfrom azure.identity import DefaultAzureCredential\n\n# Client 초기화\nclient = AIProjectClient.from_connection_string(\n    credential=DefaultAzureCredential(),\n    conn_str=\"your_connection_string\"\n)\n\n# 에이전트 생성\nagent = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"My Agent\",\n    instructions=\"You are a helpful assistant...\"\n)\n```",
+    "category": "에이전트 개발 기초",
+    "section": "1",
+    "subsection": "Azure AI Foundry SDK로 에이전트 구축",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-01-03",
+    "title": "에이전트 개발 기초 - Function Tools 추가",
+    "content": "에이전트에 사용자 정의 함수 도구를 추가합니다:\n\n```python\nfrom azure.ai.projects.models import FunctionTool, ToolSet\n\n# ToolSet 생성\ntoolset = ToolSet()\n\n# Function Tool 추가\ntoolset.add(FunctionTool(\n    name=\"search_knowledge\",\n    description=\"Search the knowledge base for information\",\n    parameters={\n        \"type\": \"object\",\n        \"properties\": {\n            \"query\": {\n                \"type\": \"string\",\n                \"description\": \"The search query\"\n            }\n        },\n        \"required\": [\"query\"]\n    }\n))\n\n# 에이전트에 ToolSet 적용\nagent = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"Knowledge Agent\",\n    instructions=\"Use the search tool to find information\",\n    toolset=toolset\n)\n```",
+    "category": "에이전트 개발 기초",
+    "section": "1",
+    "subsection": "Function Tools 추가",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-01-04",
+    "title": "에이전트 개발 기초 - Thread와 Run 관리",
+    "content": "에이전트와의 대화는 Thread와 Run을 통해 관리됩니다:\n\n```python\n# Thread 생성\nthread = client.agents.create_thread()\n\n# 메시지 추가\nmessage = client.agents.create_message(\n    thread_id=thread.id,\n    role=\"user\",\n    content=\"Tell me about Azure AI\"\n)\n\n# Run 생성\nrun = client.agents.create_run(\n    thread_id=thread.id,\n    agent_id=agent.id\n)\n\n# Run 완료 대기\nimport time\nwhile run.status in [\"queued\", \"in_progress\"]:\n    time.sleep(1)\n    run = client.agents.get_run(thread_id=thread.id, run_id=run.id)\n\n# 응답 가져오기\nmessages = client.agents.list_messages(thread_id=thread.id)\nfor message in messages:\n    print(f\"{message.role}: {message.content}\")\n```",
+    "category": "에이전트 개발 기초",
+    "section": "1",
+    "subsection": "Thread와 Run 관리",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-01-05",
+    "title": "에이전트 개발 기초 - Tool Call 처리",
+    "content": "에이전트가 도구를 호출할 때 처리:\n\n```python\nimport json\n\nwhile True:\n    run = client.agents.get_run(thread_id=thread.id, run_id=run.id)\n    \n    if run.status == \"requires_action\":\n        tool_calls = run.required_action.submit_tool_outputs.tool_calls\n        tool_outputs = []\n        \n        for tool_call in tool_calls:\n            if tool_call.function.name == \"search_knowledge\":\n                args = json.loads(tool_call.function.arguments)\n                result = search_function(args[\"query\"])\n                \n                tool_outputs.append({\n                    \"tool_call_id\": tool_call.id,\n                    \"output\": json.dumps(result)\n                })\n        \n        # 도구 결과 제출\n        client.agents.submit_tool_outputs_to_run(\n            thread_id=thread.id,\n            run_id=run.id,\n            tool_outputs=tool_outputs\n        )\n    \n    elif run.status == \"completed\":\n        break\n    \n    time.sleep(1)\n```",
+    "category": "에이전트 개발 기초",
+    "section": "1",
+    "subsection": "Tool Call 처리",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-01-06",
+    "title": "에이전트 개발 기초 - Best Practices",
+    "content": "1. **명확한 지시사항**: 에이전트 동작에 대한 상세하고 구체적인 지시사항 제공\n2. **도구 선택**: 에이전트의 작업에 적합한 도구 선택\n3. **에러 처리**: 강력한 에러 처리 및 폴백 메커니즘 구현\n4. **모니터링**: Application Insights를 사용하여 에이전트 성능 모니터링\n5. **보안**: Managed Identity와 Key Vault를 사용하여 자격 증명 관리\n\n---",
+    "category": "에이전트 개발 기초",
+    "section": "1",
+    "subsection": "Best Practices",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-00",
+    "title": "멀티 에이전트 아키텍처 - 개요",
+    "content": "## Connected Agent 패턴\n\nConnected Agent는 다음을 통해 복잡한 문제를 해결합니다:\n1. **전문화**: 각 에이전트가 특정 도메인에 집중\n2. **조정**: 메인 에이전트가 워크플로우를 조율\n3. **통신**: 에이전트가 정보와 결과를 교환",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-01",
+    "title": "멀티 에이전트 아키텍처 - 아키텍처 개요",
+    "content": "```\n사용자 요청\n    ↓\nMain Orchestrator Agent\n    ├→ Researcher Agent → AI Search\n    ├→ Writer Agent\n    └→ MCP Server → External Tools\n```",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "아키텍처 개요",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-02",
+    "title": "멀티 에이전트 아키텍처 - 에이전트 역할",
+    "content": "### Main Orchestrator Agent\n- **책임**: 전문 에이전트 간 조정\n- **능력**: 작업 분해, 에이전트 라우팅, 결과 통합\n- **예시**: \"연구원에게 정보 수집을 요청한 다음 작가에게 보고서 작성을 요청하겠습니다\"\n\n### Researcher Agent\n- **책임**: 정보 검색 및 분석\n- **능력**: 검색, 사실 확인, 데이터 수집\n- **지식 소스**: RAG와 AI Search\n- **예시**: \"주제에 대한 10개의 관련 문서를 찾았습니다\"\n\n### Writer Agent\n- **책임**: 콘텐츠 생성 및 포맷팅\n- **능력**: 작성, 편집, 포맷팅\n- **예시**: \"연구를 바탕으로 종합적인 기사를 작성했습니다\"",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "에이전트 역할",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-03",
+    "title": "멀티 에이전트 아키텍처 - 통신 패턴",
+    "content": "### Sequential Processing (순차 처리)\n```\nMain → Researcher → Main → Writer → Main → User\n```\n\n### Parallel Processing (병렬 처리)\n```\nMain → [Researcher, Writer] → Main → User\n```\n\n### Iterative Refinement (반복 개선)\n```\nMain → Writer → Main → Researcher → Main → Writer → User\n```",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "통신 패턴",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-04-a",
+    "title": "멀티 에이전트 아키텍처 - Azure AI Foundry에서 Connected Agents 구현",
+    "content": "### Connected Agents 생성\n\n```python\nfrom azure.ai.projects.models import FunctionTool, ToolSet\n\n# Main agent 생성\nmain_toolset = ToolSet()\n\n# Researcher agent를 Function Tool로 추가\nmain_toolset.add(FunctionTool(\n    name=\"call_researcher_agent\",\n    description=\"Research information using AI Search knowledge base\",\n    parameters={\n        \"type\": \"object\",\n        \"properties\": {\n            \"query\": {\n                \"type\": \"string\",\n                \"description\": \"What to research\"\n            }\n        },\n        \"required\": [\"query\"]\n    }\n))\n\n# Writer agent를 Function Tool로 추가\nmain_toolset.add(FunctionTool(\n    name=\"call_writer_agent\",\n    description=\"Write structured documents based on content\",\n    parameters={\n        \"type\": \"object\",\n        \"properties\": {\n            \"content\": {\n                \"type\": \"string\",\n                \"description\": \"Content to structure and write\"\n            }\n        },\n        \"required\": [\"content\"]\n    }\n))\n\n# Main Orchestrator Agent 생성\nmain_agent = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"Main Orchestrator\",\n    instructions=\"\"\"\n    You coordinate between researcher and writer agents.\n    - Use call_researcher_agent for information gathering\n    - Use call_writer_agent for content creation\n    - Synthesize results for the user\n    \"\"\",\n    toolset=main_toolset\n)\n```\n\n### Researcher Agent 생성 (File Search)",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "Azure AI Foundry에서 Connected Agents 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-04-b",
+    "title": "멀티 에이전트 아키텍처 - Azure AI Foundry에서 Connected Agents 구현",
+    "content": "```python\n# Vector Store 생성\nvector_store = client.agents.create_vector_store(\n    name=\"knowledge-base\",\n    data_sources=[{\n        \"type\": \"azure_ai_search\",\n        \"parameters\": {\n            \"endpoint\": os.getenv(\"AZURE_SEARCH_ENDPOINT\"),\n            \"index_name\": \"knowledge-base-index\",\n            \"authentication\": {\n                \"type\": \"system_assigned_managed_identity\"\n            }\n        }\n    }]\n)\n\n# Researcher Agent 생성\nresearcher_toolset = ToolSet()\nresearcher_toolset.add_file_search_tool(vector_store_ids=[vector_store.id])\n\nresearcher_agent = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"Researcher\",\n    instructions=\"You specialize in finding and analyzing information using the knowledge base\",\n    toolset=researcher_toolset\n)\n```\n\n### Writer Agent 생성\n\n```python\nwriter_agent = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"Writer\",\n    instructions=\"You specialize in creating high-quality, structured content\"\n)\n```\n\n### Agent 간 통신 구현\n\n```python\nimport requests\nimport json",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "Azure AI Foundry에서 Connected Agents 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-04-c",
+    "title": "멀티 에이전트 아키텍처 - Azure AI Foundry에서 Connected Agents 구현",
+    "content": "# Main Agent의 Tool Call 처리\nwhile True:\n    run = client.agents.get_run(thread_id=thread.id, run_id=run.id)\n    \n    if run.status == \"requires_action\":\n        tool_calls = run.required_action.submit_tool_outputs.tool_calls\n        tool_outputs = []\n        \n        for tool_call in tool_calls:\n            if tool_call.function.name == \"call_researcher_agent\":\n                # Researcher Agent API 호출\n                args = json.loads(tool_call.function.arguments)\n                result = requests.post(\n                    f\"{RESEARCHER_ENDPOINT}/query\",\n                    json={\"query\": args[\"query\"]}\n                ).json()\n                \n                tool_outputs.append({\n                    \"tool_call_id\": tool_call.id,\n                    \"output\": json.dumps(result)\n                })\n            \n            elif tool_call.function.name == \"call_writer_agent\":\n                # Writer Agent API 호출\n                args = json.loads(tool_call.function.arguments)\n                result = requests.post(\n                    f\"{WRITER_ENDPOINT}/write\",\n                    json={\"content\": args[\"content\"]}\n                ).json()\n                \n                tool_outputs.append({\n                    \"tool_call_id\": tool_call.id,\n                    \"output\": json.dumps(result)\n                })\n        \n        # Tool 결과 제출\n        client.agents.submit_tool_outputs_to_run(\n            thread_id=thread.id,\n            run_id=run.id,\n            tool_outputs=tool_outputs\n        )\n    \n    elif run.status == \"completed\":\n        break\n    \n    time.sleep(1)\n```",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "Azure AI Foundry에서 Connected Agents 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-05",
+    "title": "멀티 에이전트 아키텍처 - 설계 고려사항",
+    "content": "### 언제 Multiple Agents를 사용할까?\n- 다양한 전문 지식이 필요한 복잡한 작업\n- 단계별로 구분되는 작업 (연구 → 분석 → 작성)\n- 전문 지식이나 도구가 필요한 경우\n\n### Single vs. Multiple Agents\n**Single Agent 사용** 시:\n- 단순하고 직관적인 작업\n- 단일 전문 분야\n- 낮은 지연 시간 요구사항\n\n**Multiple Agents 사용** 시:\n- 복잡하고 다단계 워크플로우\n- 전문 지식 도메인\n- 병렬 작업 실행 필요",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "설계 고려사항",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-06",
+    "title": "멀티 에이전트 아키텍처 - Best Practices",
+    "content": "1. **명확한 에이전트 경계**: 구체적인 책임 정의\n2. **효율적인 통신**: 에이전트 간 호출 최소화\n3. **에러 전파**: 실패를 우아하게 처리\n4. **상태 관리**: 에이전트 간 대화 상태 추적\n5. **비용 최적화**: 에이전트 복잡도와 성능의 균형\n6. **테스트**: 개별 에이전트와 전체 워크플로우 테스트\n\n---",
+    "category": "멀티 에이전트 아키텍처",
+    "section": "2",
+    "subsection": "Best Practices",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-03-00",
+    "title": "RAG와 Azure AI Search - 개요",
+    "content": "## Retrieval-Augmented Generation (RAG)이란?\n\nRAG는 응답을 생성하기 전에 외부 지식 소스에서 관련 정보를 검색하여 언어 모델 응답을 향상시키는 기술입니다. 이 접근 방식은 대형 언어 모델의 강력함과 검색 및 검색 시스템의 정확성을 결합합니다.",
+    "category": "RAG와 Azure AI Search",
+    "section": "3",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "rag",
+        "azure-search",
+        "vector-search",
+        "embeddings"
+      ]
+    }
+  },
+  {
+    "id": "doc-03-01",
+    "title": "RAG와 Azure AI Search - Azure AI Search 개요",
+    "content": "Azure AI Search는 다음을 제공하는 클라우드 검색 서비스입니다:\n- **Full-text search**: 전통적인 키워드 기반 검색\n- **Vector search**: 임베딩을 사용한 의미적 유사성 검색\n- **Hybrid search**: Full-text와 vector search 결합\n- **Semantic ranking**: AI 기반 관련성 순위",
+    "category": "RAG와 Azure AI Search",
+    "section": "3",
+    "subsection": "Azure AI Search 개요",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "rag",
+        "azure-search",
+        "vector-search",
+        "embeddings"
+      ]
+    }
+  },
+  {
+    "id": "doc-03-02-a",
+    "title": "RAG와 Azure AI Search - Azure AI Search로 RAG 구현",
+    "content": "### Step 1: 인덱스 생성\n텍스트와 벡터 필드를 모두 포함하는 검색 인덱스 생성:\n\n```python\nfrom azure.search.documents.indexes import SearchIndexClient\nfrom azure.search.documents.indexes.models import (\n    SearchIndex,\n    SearchField,\n    SearchFieldDataType,\n    VectorSearch,\n    VectorSearchProfile,\n    HnswAlgorithmConfiguration\n)\nfrom azure.identity import DefaultAzureCredential\n\n# Index Client 생성\nindex_client = SearchIndexClient(\n    endpoint=os.getenv(\"AZURE_SEARCH_ENDPOINT\"),\n    credential=DefaultAzureCredential()\n)\n\n# 인덱스 스키마 정의\nfields = [\n    SearchField(\n        name=\"id\",\n        type=SearchFieldDataType.String,\n        key=True\n    ),\n    SearchField(\n        name=\"content\",\n        type=SearchFieldDataType.String,\n        searchable=True\n    ),\n    SearchField(\n        name=\"contentVector\",\n        type=SearchFieldDataType.Collection(SearchFieldDataType.Single),\n        vector_search_dimensions=1536,\n        vector_search_profile_name=\"my-vector-profile\"\n    )\n]\n\n# Vector Search 구성\nvector_search = VectorSearch(\n    profiles=[\n        VectorSearchProfile(\n            name=\"my-vector-profile\",\n            algorithm_configuration_name=\"my-hnsw-config\"\n        )\n    ],\n    algorithms=[\n        HnswAlgorithmConfiguration(name=\"my-hnsw-config\")\n    ]\n)\n\n# 인덱스 생성\nindex = SearchIndex(\n    name=\"knowledge-base-index\",\n    fields=fields,\n    vector_search=vector_search\n)\nindex_client.create_index(index)\n```\n\n### Step 2: 문서 임베딩\nAzure OpenAI를 사용하여 문서 임베딩 생성:",
+    "category": "RAG와 Azure AI Search",
+    "section": "3",
+    "subsection": "Azure AI Search로 RAG 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "rag",
+        "azure-search",
+        "vector-search",
+        "embeddings"
+      ]
+    }
+  },
+  {
+    "id": "doc-03-02-b",
+    "title": "RAG와 Azure AI Search - Azure AI Search로 RAG 구현",
+    "content": "```python\nfrom openai import AzureOpenAI\n\nopenai_client = AzureOpenAI(\n    api_key=os.getenv(\"AZURE_OPENAI_API_KEY\"),\n    api_version=\"2024-02-01\",\n    azure_endpoint=os.getenv(\"AZURE_OPENAI_ENDPOINT\")\n)\n\ndef get_embedding(text: str) -> list:\n    response = openai_client.embeddings.create(\n        model=\"text-embedding-3-large\",\n        input=text\n    )\n    return response.data[0].embedding\n```\n\n### Step 3: 문서 인덱싱\n문서와 임베딩을 인덱스에 업로드:\n\n```python\nfrom azure.search.documents import SearchClient\n\nsearch_client = SearchClient(\n    endpoint=os.getenv(\"AZURE_SEARCH_ENDPOINT\"),\n    index_name=\"knowledge-base-index\",\n    credential=DefaultAzureCredential()\n)\n\n# 문서 준비\ndocuments = [\n    {\n        \"id\": \"1\",\n        \"content\": \"Azure AI Foundry is a platform for building AI applications...\",\n        \"contentVector\": get_embedding(\"Azure AI Foundry is a platform...\")\n    }\n]\n\n# 문서 업로드\nresult = search_client.upload_documents(documents=documents)\n```\n\n### Step 4: 검색 및 검색\n벡터와 키워드 검색을 결합한 하이브리드 검색:\n\n```python\nfrom azure.search.documents.models import VectorizedQuery",
+    "category": "RAG와 Azure AI Search",
+    "section": "3",
+    "subsection": "Azure AI Search로 RAG 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "rag",
+        "azure-search",
+        "vector-search",
+        "embeddings"
+      ]
+    }
+  },
+  {
+    "id": "doc-03-02-c",
+    "title": "RAG와 Azure AI Search - Azure AI Search로 RAG 구현",
+    "content": "def search_knowledge(query: str, top: int = 5):\n    # 쿼리 임베딩 생성\n    query_vector = get_embedding(query)\n    \n    # 하이브리드 검색 수행\n    results = search_client.search(\n        search_text=query,\n        vector_queries=[\n            VectorizedQuery(\n                vector=query_vector,\n                k_nearest_neighbors=top,\n                fields=\"contentVector\"\n            )\n        ],\n        top=top\n    )\n    \n    return [{\"content\": doc[\"content\"], \"score\": doc[\"@search.score\"]} \n            for doc in results]\n```",
+    "category": "RAG와 Azure AI Search",
+    "section": "3",
+    "subsection": "Azure AI Search로 RAG 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "rag",
+        "azure-search",
+        "vector-search",
+        "embeddings"
+      ]
+    }
+  },
+  {
+    "id": "doc-03-03",
+    "title": "RAG와 Azure AI Search - RAG 파이프라인 통합",
+    "content": "검색 결과를 에이전트 응답에 통합:\n\n```python",
+    "category": "RAG와 Azure AI Search",
+    "section": "3",
+    "subsection": "RAG 파이프라인 통합",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "rag",
+        "azure-search",
+        "vector-search",
+        "embeddings"
+      ]
+    }
+  },
+  {
+    "id": "doc-01-00",
+    "title": "사용자 쿼리 - 개요",
+    "content": "user_query = \"Tell me about Azure AI Foundry\"",
+    "category": "사용자 쿼리",
+    "section": "1",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "agent-development",
+        "azure-ai-foundry",
+        "sdk",
+        "basics"
+      ]
+    }
+  },
+  {
+    "id": "doc-02-00",
+    "title": "지식 베이스 검색 - 개요",
+    "content": "search_results = search_knowledge(user_query, top=5)",
+    "category": "지식 베이스 검색",
+    "section": "2",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "multi-agent",
+        "architecture",
+        "orchestration",
+        "connected-agents"
+      ]
+    }
+  },
+  {
+    "id": "doc-03-00",
+    "title": "컨텍스트 구성 - 개요",
+    "content": "context = \"\\n\\n\".join([doc[\"content\"] for doc in search_results])",
+    "category": "컨텍스트 구성",
+    "section": "3",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "rag",
+        "azure-search",
+        "vector-search",
+        "embeddings"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-00",
+    "title": "에이전트에 컨텍스트 제공 - 개요",
+    "content": "thread = client.agents.create_thread()\nmessage = client.agents.create_message(\n    thread_id=thread.id,\n    role=\"user\",\n    content=f\"Context:\\n{context}\\n\\nQuestion: {user_query}\"\n)",
+    "category": "에이전트에 컨텍스트 제공",
+    "section": "4",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-00",
+    "title": "에이전트 실행 - 개요",
+    "content": "run = client.agents.create_run(\n    thread_id=thread.id,\n    agent_id=agent.id\n)\n```",
+    "category": "에이전트 실행",
+    "section": "5",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-01",
+    "title": "에이전트 실행 - Agent SDK의 File Search Tool 사용",
+    "content": "Azure AI Agent SDK는 RAG를 위한 내장 File Search Tool을 제공합니다:\n\n```python\nfrom azure.ai.projects.models import ToolSet\n\n# Vector Store 생성\nvector_store = client.agents.create_vector_store(\n    name=\"knowledge-base\",\n    data_sources=[{\n        \"type\": \"azure_ai_search\",\n        \"parameters\": {\n            \"endpoint\": os.getenv(\"AZURE_SEARCH_ENDPOINT\"),\n            \"index_name\": \"knowledge-base-index\",\n            \"authentication\": {\n                \"type\": \"system_assigned_managed_identity\"\n            }\n        }\n    }]\n)\n\n# Agent에 File Search Tool 추가\ntoolset = ToolSet()\ntoolset.add_file_search_tool(vector_store_ids=[vector_store.id])\n\n# Researcher Agent 생성\nresearcher = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"Researcher\",\n    instructions=\"Use file search to find accurate information from the knowledge base\",\n    toolset=toolset\n)\n```",
+    "category": "에이전트 실행",
+    "section": "5",
+    "subsection": "Agent SDK의 File Search Tool 사용",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-02",
+    "title": "에이전트 실행 - 성능 최적화",
+    "content": "- **청크 크기**: 문서 청크 크기 최적화 (일반적으로 500-1000 토큰)\n- **오버랩**: 컨텍스트 유지를 위해 오버랩 청크 사용\n- **캐싱**: 자주 접근하는 임베딩 캐싱\n- **필터링**: 메타데이터 필터를 사용하여 검색 범위 축소\n- **재순위**: Semantic Ranker를 사용하여 결과 품질 향상",
+    "category": "에이전트 실행",
+    "section": "5",
+    "subsection": "성능 최적화",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-03",
+    "title": "에이전트 실행 - Best Practices",
+    "content": "1. **문서 청킹**: 의미 있는 단위로 문서 분할\n2. **임베딩 모델 선택**: 작업에 적합한 임베딩 모델 선택 (text-embedding-3-large)\n3. **하이브리드 검색**: 벡터와 키워드 검색 결합하여 더 나은 결과\n4. **메타데이터 활용**: 필터링 및 검색 개선을 위한 메타데이터 추가\n5. **모니터링**: 검색 품질 및 지연 시간 모니터링\n\n---",
+    "category": "에이전트 실행",
+    "section": "5",
+    "subsection": "Best Practices",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-00",
+    "title": "Model Context Protocol (MCP) - 개요",
+    "content": "## MCP 소개\n\nModel Context Protocol (MCP)는 AI 에이전트가 외부 도구 및 서비스와 상호 작용하는 표준화된 방법입니다. 도구 발견, 호출 및 결과 처리를 위한 일관된 인터페이스를 제공합니다.",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-01",
+    "title": "Model Context Protocol (MCP) - MCP Server 아키텍처",
+    "content": "MCP 서버는 에이전트가 사용할 수 있는 도구를 노출합니다:\n\n```\nAgent → MCP Server → Tool Execution → Result → Agent\n```\n\n### MCP Server 구성요소\n1. **Tool Registry**: 사용 가능한 도구 목록\n2. **Tool Executor**: 도구 실행 엔진\n3. **API Endpoint**: HTTP/gRPC 인터페이스",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "MCP Server 아키텍처",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-02",
+    "title": "Model Context Protocol (MCP) - Tool 정의",
+    "content": "MCP의 도구는 표준 스키마를 따릅니다:\n\n```json\n{\n  \"name\": \"tool_name\",\n  \"description\": \"What the tool does\",\n  \"parameters\": {\n    \"type\": \"object\",\n    \"properties\": {\n      \"param1\": {\n        \"type\": \"string\",\n        \"description\": \"Parameter description\"\n      }\n    },\n    \"required\": [\"param1\"]\n  }\n}\n```",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "Tool 정의",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-03-a",
+    "title": "Model Context Protocol (MCP) - MCP Tools 구현",
+    "content": "### 기본 Tool 구현\n\n```python\nfrom typing import Dict, Any\n\ndef weather_tool(location: str, unit: str = \"celsius\") -> Dict[str, Any]:\n    \"\"\"날씨 정보를 가져오는 도구\"\"\"\n    # 외부 API 호출 또는 데이터베이스 쿼리\n    weather_data = get_weather_data(location)\n    \n    return {\n        \"success\": True,\n        \"location\": location,\n        \"temperature\": weather_data[\"temp\"],\n        \"unit\": unit,\n        \"conditions\": weather_data[\"conditions\"]\n    }\n\ndef calculate_tool(operation: str, a: float, b: float) -> Dict[str, Any]:\n    \"\"\"수학 연산을 수행하는 도구\"\"\"\n    operations = {\n        \"add\": lambda x, y: x + y,\n        \"subtract\": lambda x, y: x - y,\n        \"multiply\": lambda x, y: x * y,\n        \"divide\": lambda x, y: x / y if y != 0 else None\n    }\n    \n    if operation not in operations:\n        return {\"success\": False, \"error\": \"Invalid operation\"}\n    \n    result = operations[operation](a, b)\n    \n    if result is None:\n        return {\"success\": False, \"error\": \"Division by zero\"}\n    \n    return {\"success\": True, \"result\": result}\n```\n\n### Tool 등록",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "MCP Tools 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-03-b",
+    "title": "Model Context Protocol (MCP) - MCP Tools 구현",
+    "content": "```python\nAVAILABLE_TOOLS = {\n    \"weather\": {\n        \"name\": \"weather\",\n        \"description\": \"Get current weather for a location\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"location\": {\n                    \"type\": \"string\",\n                    \"description\": \"City name or location\"\n                },\n                \"unit\": {\n                    \"type\": \"string\",\n                    \"enum\": [\"celsius\", \"fahrenheit\"],\n                    \"description\": \"Temperature unit\"\n                }\n            },\n            \"required\": [\"location\"]\n        },\n        \"function\": weather_tool\n    },\n    \"calculate\": {\n        \"name\": \"calculate\",\n        \"description\": \"Perform mathematical operations\",\n        \"parameters\": {\n            \"type\": \"object\",\n            \"properties\": {\n                \"operation\": {\n                    \"type\": \"string\",\n                    \"enum\": [\"add\", \"subtract\", \"multiply\", \"divide\"],\n                    \"description\": \"Mathematical operation\"\n                },\n                \"a\": {\n                    \"type\": \"number\",\n                    \"description\": \"First number\"\n                },\n                \"b\": {\n                    \"type\": \"number\",\n                    \"description\": \"Second number\"\n                }\n            },\n            \"required\": [\"operation\", \"a\", \"b\"]\n        },\n        \"function\": calculate_tool\n    }\n}\n```",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "MCP Tools 구현",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-04",
+    "title": "Model Context Protocol (MCP) - MCP Server 구현 (FastAPI)",
+    "content": "```python\nfrom fastapi import FastAPI, HTTPException\nfrom pydantic import BaseModel\nfrom typing import Dict, Any, List\n\napp = FastAPI()\n\nclass ToolRequest(BaseModel):\n    tool_name: str\n    parameters: Dict[str, Any]\n\n@app.get(\"/tools\")\nasync def list_tools() -> Dict[str, List[Dict]]:\n    \"\"\"사용 가능한 모든 도구 목록 반환\"\"\"\n    tools = []\n    for tool_name, tool_def in AVAILABLE_TOOLS.items():\n        tools.append({\n            \"name\": tool_def[\"name\"],\n            \"description\": tool_def[\"description\"],\n            \"parameters\": tool_def[\"parameters\"]\n        })\n    return {\"tools\": tools}\n\n@app.post(\"/execute\")\nasync def execute_tool(request: ToolRequest) -> Dict[str, Any]:\n    \"\"\"도구 실행\"\"\"\n    tool_name = request.tool_name\n    \n    if tool_name not in AVAILABLE_TOOLS:\n        raise HTTPException(status_code=404, detail=\"Tool not found\")\n    \n    tool_def = AVAILABLE_TOOLS[tool_name]\n    \n    try:\n        # 도구 함수 실행\n        result = tool_def[\"function\"](**request.parameters)\n        return result\n    except Exception as e:\n        return {\n            \"success\": False,\n            \"error\": str(e)\n        }\n\nif __name__ == \"__main__\":\n    import uvicorn\n    uvicorn.run(app, host=\"0.0.0.0\", port=8000)\n```",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "MCP Server 구현 (FastAPI)",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-05",
+    "title": "Model Context Protocol (MCP) - 일반적인 MCP Tool 카테고리",
+    "content": "1. **Information Retrieval**: 검색, 조회, 쿼리 도구\n2. **Data Transformation**: 포맷, 파싱, 변환 도구\n3. **External APIs**: 타사 서비스 통합\n4. **Computation**: 계산, 분석, 처리 도구\n5. **File Operations**: 파일 읽기, 쓰기, 관리",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "일반적인 MCP Tool 카테고리",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-06-a",
+    "title": "Model Context Protocol (MCP) - Agent에 MCP Tools 통합",
+    "content": "### 도구 발견 및 등록\n\n```python\nimport requests\nfrom azure.ai.projects.models import FunctionTool, ToolSet\n\n# MCP Server에서 도구 목록 가져오기\nmcp_server_url = os.getenv(\"MCP_SERVER_URL\")\nresponse = requests.get(f\"{mcp_server_url}/tools\")\nmcp_tools = response.json()[\"tools\"]\n\n# ToolSet에 MCP 도구 추가\ntoolset = ToolSet()\nfor tool in mcp_tools:\n    toolset.add(FunctionTool(\n        name=tool[\"name\"],\n        description=tool[\"description\"],\n        parameters=tool[\"parameters\"]\n    ))\n\n# Agent 생성\nagent = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"MCP-Enabled Agent\",\n    instructions=\"You can use the available tools to help users\",\n    toolset=toolset\n)\n```\n\n### MCP Tool 실행\n\n```python\ndef execute_mcp_tool(tool_name: str, parameters: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"MCP 도구 실행\"\"\"\n    response = requests.post(\n        f\"{mcp_server_url}/execute\",\n        json={\n            \"tool_name\": tool_name,\n            \"parameters\": parameters\n        }\n    )\n    return response.json()",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "Agent에 MCP Tools 통합",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-06-b",
+    "title": "Model Context Protocol (MCP) - Agent에 MCP Tools 통합",
+    "content": "# Agent Tool Call 처리\nwhile True:\n    run = client.agents.get_run(thread_id=thread.id, run_id=run.id)\n    \n    if run.status == \"requires_action\":\n        tool_calls = run.required_action.submit_tool_outputs.tool_calls\n        tool_outputs = []\n        \n        for tool_call in tool_calls:\n            # MCP Tool 실행\n            args = json.loads(tool_call.function.arguments)\n            result = execute_mcp_tool(tool_call.function.name, args)\n            \n            tool_outputs.append({\n                \"tool_call_id\": tool_call.id,\n                \"output\": json.dumps(result)\n            })\n        \n        # 결과 제출\n        client.agents.submit_tool_outputs_to_run(\n            thread_id=thread.id,\n            run_id=run.id,\n            tool_outputs=tool_outputs\n        )\n    \n    elif run.status == \"completed\":\n        break\n    \n    time.sleep(1)\n```",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "Agent에 MCP Tools 통합",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-07",
+    "title": "Model Context Protocol (MCP) - MCP Server 배포",
+    "content": "### Dockerfile 예제\n\n```dockerfile\nFROM python:3.11-slim\n\nWORKDIR /app\n\n# 의존성 설치\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n\n# 애플리케이션 복사\nCOPY server.py .\nCOPY tools/ ./tools/\n\n# 포트 노출\nEXPOSE 8000\n\n# 헬스 체크\nHEALTHCHECK --interval=30s --timeout=3s \\\n  CMD curl -f http://localhost:8000/health || exit 1\n\n# 서버 실행\nCMD [\"python\", \"server.py\"]\n```\n\n### requirements.txt\n\n```\nfastapi==0.104.1\nuvicorn[standard]==0.24.0\npydantic==2.5.0\nrequests==2.31.0\n```",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "MCP Server 배포",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-04-08",
+    "title": "Model Context Protocol (MCP) - Best Practices",
+    "content": "1. **도구 명명**: 명확하고 설명적인 이름 사용\n2. **파라미터 검증**: 모든 입력 파라미터 검증\n3. **에러 처리**: 구조화된 에러 응답 반환\n4. **문서화**: 상세한 도구 설명 제공\n5. **버전 관리**: MCP Server API 버전 관리\n6. **모니터링**: 도구 사용 및 성능 메트릭 로깅\n7. **타임아웃**: 장기 실행 도구에 타임아웃 설정\n8. **보안**: API 키 및 인증 구현\n\n---",
+    "category": "Model Context Protocol (MCP)",
+    "section": "4",
+    "subsection": "Best Practices",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "mcp",
+        "tools",
+        "integration",
+        "external-apis"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-00",
+    "title": "Container Apps 배포 - 개요",
+    "content": "## Azure Container Apps 개요\n\nAzure Container Apps는 다음을 제공하는 서버리스 컨테이너 호스팅 서비스입니다:\n- 자동 스케일링 (scale-to-zero 포함)\n- 내장 로드 밸런싱\n- HTTPS 인그레스 지원\n- 마이크로서비스 아키텍처 지원\n- Azure 서비스와의 통합",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "overview",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-01",
+    "title": "Container Apps 배포 - Container Apps Environment",
+    "content": "Container Apps Environment는 컨테이너 앱 그룹 주변의 안전한 경계입니다:\n\n```\nEnvironment\n├── Container App 1 (Main Agent)\n├── Container App 2 (Researcher Agent)\n├── Container App 3 (Writer Agent)\n└── Container App 4 (MCP Server)\n```\n\n### Environment 특징\n- 공유 네트워크 공간\n- 내부 서비스 검색\n- 공유 로그 및 모니터링\n- VNet 통합 가능",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "Container Apps Environment",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-02",
+    "title": "Container Apps 배포 - 에이전트를 Container Apps에 배포",
+    "content": "### 사전 요구사항\n1. Azure Container Registry에 컨테이너 이미지\n2. Container Apps Environment\n3. 적절한 네트워크 구성\n\n### 배포 단계\n\n#### 1. Container 이미지 빌드\n\n```bash\n# Dockerfile 작성\ncat > Dockerfile << 'EOF'\nFROM python:3.11-slim\n\nWORKDIR /app\n\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\n\nCOPY app.py .\nCOPY src/ ./src/\n\nEXPOSE 8000\n\nCMD [\"uvicorn\", \"app:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]\nEOF\n\n# 이미지 빌드\ndocker build -t myagent:latest .\n```\n\n#### 2. Container Registry에 푸시\n\n```bash\n# ACR 로그인\naz acr login --name myregistry\n\n# 이미지 태그\ndocker tag myagent:latest myregistry.azurecr.io/myagent:latest\n\n# 이미지 푸시\ndocker push myregistry.azurecr.io/myagent:latest\n```\n\n#### 3. Container App 배포\n\n```bash\n# Container App 생성\naz containerapp create \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --environment my-env \\\n  --image myregistry.azurecr.io/myagent:latest \\\n  --target-port 8000 \\\n  --ingress external \\\n  --min-replicas 0 \\\n  --max-replicas 10 \\\n  --cpu 0.5 \\\n  --memory 1.0Gi \\\n  --registry-server myregistry.azurecr.io\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "에이전트를 Container Apps에 배포",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-03",
+    "title": "Container Apps 배포 - 환경 변수 구성",
+    "content": "Container App에 환경 변수 설정:\n\n```bash\naz containerapp update \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --set-env-vars \\\n    \"AZURE_AI_PROJECT_CONNECTION_STRING=secretref:project-connection\" \\\n    \"AZURE_SEARCH_ENDPOINT=https://mysearch.search.windows.net\" \\\n    \"MCP_SERVER_URL=https://mcp-server.internal.my-env.azurecontainerapps.io\"\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "환경 변수 구성",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-04",
+    "title": "Container Apps 배포 - Secrets 관리",
+    "content": "민감한 값을 Secret으로 저장:\n\n```bash\n# Secret 설정\naz containerapp secret set \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --secrets \"project-connection=<connection-string>\"\n\n# Secret 참조\naz containerapp update \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --set-env-vars \"AZURE_AI_PROJECT_CONNECTION_STRING=secretref:project-connection\"\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "Secrets 관리",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-05",
+    "title": "Container Apps 배포 - Managed Identity 사용",
+    "content": "```bash\n# System-assigned Identity 활성화\naz containerapp identity assign \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --system-assigned\n\n# AI Services에 역할 부여\nPRINCIPAL_ID=$(az containerapp identity show \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --query principalId -o tsv)\n\naz role assignment create \\\n  --role \"Cognitive Services User\" \\\n  --assignee $PRINCIPAL_ID \\\n  --scope /subscriptions/<sub-id>/resourceGroups/<rg>/providers/Microsoft.CognitiveServices/accounts/<ai-services-name>\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "Managed Identity 사용",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-06",
+    "title": "Container Apps 배포 - 스케일링 구성",
+    "content": "### HTTP 기반 스케일링\n\n```bash\naz containerapp update \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --min-replicas 1 \\\n  --max-replicas 10 \\\n  --scale-rule-name http-rule \\\n  --scale-rule-type http \\\n  --scale-rule-http-concurrency 10\n```\n\n### CPU 기반 스케일링\n\n```bash\naz containerapp update \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --scale-rule-name cpu-rule \\\n  --scale-rule-type cpu \\\n  --scale-rule-metadata type=Utilization value=70\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "스케일링 구성",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-07",
+    "title": "Container Apps 배포 - 서비스 검색 (Internal Communication)",
+    "content": "Container App 간 내부 통신:\n\n```python\nimport os\n\n# Internal FQDN: <app-name>.internal.<environment-name>.azurecontainerapps.io\nRESEARCHER_URL = os.getenv(\n    \"RESEARCHER_URL\",\n    \"https://researcher-agent.internal.my-env.azurecontainerapps.io\"\n)\nWRITER_URL = os.getenv(\n    \"WRITER_URL\",\n    \"https://writer-agent.internal.my-env.azurecontainerapps.io\"\n)\nMCP_SERVER_URL = os.getenv(\n    \"MCP_SERVER_URL\",\n    \"https://mcp-server.internal.my-env.azurecontainerapps.io\"\n)\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "서비스 검색 (Internal Communication)",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-08",
+    "title": "Container Apps 배포 - Health Probes 설정",
+    "content": "### Liveness Probe\n\n```bash\naz containerapp update \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --health-probe-type liveness \\\n  --health-probe-path /health \\\n  --health-probe-interval 30 \\\n  --health-probe-timeout 3\n```\n\n### Readiness Probe\n\n```bash\naz containerapp update \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --health-probe-type readiness \\\n  --health-probe-path /ready \\\n  --health-probe-interval 10 \\\n  --health-probe-timeout 3\n```\n\n### Health Endpoint 구현\n\n```python\nfrom fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get(\"/health\")\nasync def health_check():\n    \"\"\"Liveness probe\"\"\"\n    return {\"status\": \"healthy\"}\n\n@app.get(\"/ready\")\nasync def readiness_check():\n    \"\"\"Readiness probe\"\"\"\n    # 필요한 서비스 연결 확인\n    try:\n        # AI Project 연결 확인\n        client = AIProjectClient.from_connection_string(...)\n        # AI Search 연결 확인\n        search_client = SearchClient(...)\n        \n        return {\"status\": \"ready\"}\n    except Exception as e:\n        return {\"status\": \"not ready\", \"error\": str(e)}, 503\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "Health Probes 설정",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-09",
+    "title": "Container Apps 배포 - 로깅 및 모니터링",
+    "content": "### 로그 확인\n\n```bash\n# Console 로그 확인\naz containerapp logs show \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --type console \\\n  --follow\n\n# System 로그 확인\naz containerapp logs show \\\n  --name my-agent \\\n  --resource-group my-rg \\\n  --type system\n```\n\n### Application Insights 통합\n\n```python\nfrom opencensus.ext.azure.log_exporter import AzureLogHandler\nimport logging\n\n# Application Insights 로거 설정\nlogger = logging.getLogger(__name__)\nlogger.addHandler(AzureLogHandler(\n    connection_string=os.getenv(\"APPLICATIONINSIGHTS_CONNECTION_STRING\")\n))\n\n# 로그 작성\nlogger.info(\"Agent started\", extra={\"custom_dimensions\": {\"agent\": \"main\"}})\n```",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "로깅 및 모니터링",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-10",
+    "title": "Container Apps 배포 - Best Practices",
+    "content": "1. **Managed Identity 사용**: 환경 변수에 자격 증명 저장 방지\n2. **Health Probes 활성화**: Liveness 및 Readiness Probe 구성\n3. **이미지 최적화**: Slim 베이스 이미지 및 멀티 스테이지 빌드 사용\n4. **리소스 제한 설정**: CPU 및 메모리 요구사항 정의\n5. **Secrets 사용**: Secret으로 민감한 구성 저장\n6. **Ingress 활성화**: 외부 액세스를 위한 Ingress 구성\n7. **비용 모니터링**: 비프로덕션 워크로드에 scale-to-zero 사용\n8. **로그 중앙화**: Application Insights 또는 Log Analytics 사용\n9. **VNet 통합**: 보안 네트워킹을 위한 VNet 통합\n10. **태그 사용**: 리소스 관리를 위한 적절한 태깅",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "Best Practices",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-11",
+    "title": "Container Apps 배포 - 배포 자동화 (GitHub Actions)",
+    "content": "```yaml\nname: Deploy to Azure Container Apps\n\non:\n  push:\n    branches: [ main ]\n\njobs:\n  deploy:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v3\n      \n      - name: Login to Azure\n        uses: azure/login@v1\n        with:\n          creds: ${{ secrets.AZURE_CREDENTIALS }}\n      \n      - name: Build and push image\n        run: |\n          az acr login --name ${{ secrets.ACR_NAME }}\n          docker build -t ${{ secrets.ACR_NAME }}.azurecr.io/myagent:${{ github.sha }} .\n          docker push ${{ secrets.ACR_NAME }}.azurecr.io/myagent:${{ github.sha }}\n      \n      - name: Deploy to Container App\n        run: |\n          az containerapp update \\\n            --name my-agent \\\n            --resource-group ${{ secrets.RESOURCE_GROUP }} \\\n            --image ${{ secrets.ACR_NAME }}.azurecr.io/myagent:${{ github.sha }}\n```\n\n---",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "배포 자동화 (GitHub Actions)",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  },
+  {
+    "id": "doc-05-12",
+    "title": "Container Apps 배포 - 참고 자료",
+    "content": "- [Azure AI Foundry Documentation](https://learn.microsoft.com/azure/ai-studio/)\n- [Azure AI Agent SDK](https://learn.microsoft.com/azure/ai-studio/how-to/develop/sdk-overview)\n- [Azure AI Search Documentation](https://learn.microsoft.com/azure/search/)\n- [Azure Container Apps Documentation](https://learn.microsoft.com/azure/container-apps/)\n- [Model Context Protocol](https://modelcontextprotocol.io/)\n- [RAG Best Practices](https://learn.microsoft.com/azure/ai-studio/concepts/retrieval-augmented-generation)\n\n---\n\n**문서 버전**: 1.0  \n**최종 업데이트**: 2025년 9월 30일  \n**용도**: RAG 지식 베이스 (AI Search 인덱싱용)  \n**작성자**: GitHub Copilot",
+    "category": "Container Apps 배포",
+    "section": "5",
+    "subsection": "참고 자료",
+    "metadata": {
+      "source": "COMPLETE_GUIDE.md",
+      "lastModified": "2025-09-30",
+      "tags": [
+        "container-apps",
+        "deployment",
+        "kubernetes",
+        "devops"
+      ]
+    }
+  }
+]
