@@ -1,4 +1,4 @@
-# Azure AI Foundry Multi-Agent System Lab
+# Azure AI Foundry Agent Service Lab
 
 Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다.
 
@@ -89,18 +89,40 @@ cd agentic-ai-labs
 - Bicep 기반 Infrastructure as Code
 
 #### 📓 Lab 2: [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb)
-- AI Search 인덱스 생성 및 스키마 설계
-- 지식 베이스 문서 임베딩 및 업로드
-- 벡터 검색 및 하이브리드 검색 테스트
+**섹션 구조:**
+1. 사전 요구 사항 확인 (Prerequisites Check)
+2. 패키지 설치 및 설정 로드 (Install Packages & Load Configuration)
+3. Azure 인증 (Azure Authentication)
+4. 지식 베이스 데이터 로드 (Load Knowledge Base Data)
+5. Azure AI Search 인덱스 생성 (Create Search Index)
+6. 문서 임베딩 및 업로드 (Generate Embeddings & Upload)
+7. 하이브리드 검색 테스트 (Hybrid Search Test)
+
+**주요 내용:**
+- AI Search 인덱스 스키마 설계 (벡터 + 키워드)
+- Azure OpenAI로 텍스트 임베딩 생성 (text-embedding-ada-002)
+- 54개 AI Agent 관련 문서 인덱싱
+- 하이브리드 검색 (Vector + BM25) 실행 및 검증
 
 #### 📓 Lab 3: [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb)
-- MCP Server를 Azure Container Apps에 배포
-- Azure AI Foundry Agent Service로 Multi-Agent 생성
-  - Main Agent: 오케스트레이터
-  - Tool Agent: MCP 도구 연동
-  - Research Agent: RAG 검색
-- Connected Agent 패턴 구현
-- Multi-Agent 오케스트레이션 및 협업 테스트
+**섹션 구조:**
+1. 환경 설정 및 인증 (Setup & Authentication)
+2. Azure AI Search 키 가져오기 (Get Search Key)
+3. Azure AI Search 연결 추가 (Add Azure AI Search Connection)
+4. MCP Server 배포 (Deploy MCP Server)
+5. Agent Container 빌드 및 배포 (Build & Deploy Agent Container)
+   - 5.1. Azure 리소스 확인 (Verify Azure Resources)
+   - 5.2. Agent Service 배포 및 권한 설정 (Deploy with Permissions)
+   - 5.2.1. Agent Service 시작 (Start Agent Service)
+6. Individual Agent Testing (개별 Agent 테스트)
+7. Main Agent with Connected Agents Testing (통합 테스트)
+
+**주요 내용:**
+- MCP Server를 Azure Container Apps에 배포 (날씨, 계산기 등 도구)
+- Multi-Agent 시스템 구축 (Main, Tool, Research Agent)
+- Managed Identity 기반 RBAC 권한 설정
+- Connected Agent 패턴으로 Agent 간 협업 구현
+- 실제 질의를 통한 Multi-Agent 오케스트레이션 테스트
 
 ## 📁 프로젝트 구조
 
