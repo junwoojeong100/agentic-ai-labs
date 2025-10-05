@@ -4,11 +4,14 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ## 🎯 실습 개요
 
-이 실습에서는 다음 내용을 다룹니다:
+이 실습은 **GitHub Codespace** 환경에서 진행되도록 설계되었으며, 다음 내용을 다룹니다:
 
 1. **Azure 리소스 배포** - Bicep과 Azure Developer CLI를 사용한 인프라 배포
 2. **AI Search RAG 구성** - 벡터 검색 기반 지식 베이스 구축
 3. **Multi-Agent 시스템 구축** - Main Agent, Tool Agent (MCP 연동), Research Agent (RAG) 구현 및 오케스트레이션
+
+> **💡 실습 환경**  
+> 이 실습은 GitHub Codespace에서 실행되도록 최적화되어 있습니다. 모든 필수 도구(Azure CLI, azd, Python, Docker 등)가 사전 구성되어 있어 별도의 로컬 환경 설정 없이 바로 시작할 수 있습니다.
 
 ## 🏗️ 아키텍처
 
@@ -107,26 +110,108 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ## 📋 사전 요구사항
 
-- Azure 구독
-- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd) 설치
-- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) 설치
+### 실습 환경: GitHub Codespace
+
+이 실습은 **GitHub Codespace**에서 진행하도록 설계되었습니다.
+
+#### Codespace 환경 구성 (자동 설정됨)
+Codespace가 시작되면 다음 도구들이 자동으로 설치되어 있습니다:
+- ✅ Azure Developer CLI (azd)
+- ✅ Azure CLI (az)
+- ✅ Python 3.11+
+- ✅ Docker
+- ✅ Visual Studio Code (Web/Desktop)
+- ✅ Jupyter Notebook 확장
+- ✅ 필요한 Python 패키지
+
+#### 로컬 환경에서 실습하는 경우
+로컬에서 실습을 진행하려면 다음을 수동으로 설치해야 합니다:
+- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
+- [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli)
 - Python 3.9 이상 (권장: Python 3.11+)
-- Docker (Container 이미지 빌드용)
-- Visual Studio Code (권장)
-- Jupyter Notebook 지원 환경
+- Docker Desktop
+- Visual Studio Code + Jupyter 확장
+
+> **⚠️ 권장 사항**: GitHub Codespace 사용을 강력히 권장합니다. 로컬 환경에서는 OS별 설정 차이, 방화벽, 네트워크 정책 등으로 인한 문제가 발생할 수 있습니다.
+
+### Azure 구독 및 권한 요구사항
+
+#### 필요한 최소 권한 (이론적)
+이 실습을 완료하기 위해 이론적으로 필요한 Azure RBAC 역할:
+
+| 역할 | 용도 | 범위 |
+|------|------|------|
+| **Contributor** | 리소스 생성 및 관리 (Azure AI Foundry, OpenAI, AI Search, Container Apps 등) | 구독 또는 리소스 그룹 |
+| **User Access Administrator** | Managed Identity에 역할 할당 (Container Apps → AI Foundry Project) | 구독 또는 리소스 그룹 |
+| **Cognitive Services Contributor** | Azure OpenAI 서비스 배포 및 모델 관리 | 구독 또는 리소스 그룹 |
+| **Search Service Contributor** | Azure AI Search 인덱스 생성 및 관리 | 구독 또는 리소스 그룹 |
+| **Key Vault Administrator** | Key Vault 생성 및 비밀 관리 (선택사항) | 구독 또는 리소스 그룹 |
+
+추가로 필요한 작업 권한:
+- 리소스 그룹 생성 권한
+- 서비스 주체(Service Principal) 생성 권한 (azd 배포 시)
+- 역할 할당 권한 (Managed Identity 설정)
+- Azure AI Foundry 리소스 제공자 등록 권한
+
+#### 권장 설정: 구독 소유자
+
+> **⚠️ 실습 권장 사항**  
+> 
+> 위의 개별 역할들을 모두 구성하는 것은 복잡하고 시간이 많이 소요됩니다. **실습을 원활하게 진행하기 위해 다음 중 하나를 권장합니다:**
+>
+> 1. **구독 소유자(Owner) 역할 사용** (가장 권장)
+>    - 모든 리소스 생성 및 역할 할당이 자동으로 가능
+>    - 권한 문제로 인한 실습 중단 없음
+>    - 구독 수준에서 `Owner` 역할 필요
+>
+> 2. **별도의 실습 전용 구독 사용**
+>    - 개인 또는 팀 학습용 Azure 구독 생성
+>    - 해당 구독의 소유자로 설정
+>    - 실습 완료 후 전체 리소스 그룹 삭제로 정리
+>
+> 3. **프로덕션 환경에서 실습하지 않기**
+>    - 실습 중 잘못된 설정이나 비용 발생 가능
+>    - 별도의 개발/학습 환경 사용 권장
+
+**권한 확인 방법:**
+```bash
+# 현재 사용자의 역할 확인
+az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv) --all
+
+# 구독 소유자 여부 확인
+az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv) \
+  --role Owner --scope /subscriptions/$(az account show --query id -o tsv)
+```
 
 ## 🚀 빠른 시작
 
-### 1. 환경 설정
+### 1. GitHub Codespace 시작
+
+#### 방법 1: GitHub 웹사이트에서
+1. 이 리포지토리 페이지에서 **Code** 버튼 클릭
+2. **Codespaces** 탭 선택
+3. **Create codespace on main** 클릭
+4. Codespace 환경이 자동으로 구성됩니다 (2-3분 소요)
+
+#### 방법 2: VS Code Desktop에서
+1. VS Code에서 Command Palette 열기 (`Cmd+Shift+P` 또는 `Ctrl+Shift+P`)
+2. "Codespaces: Create New Codespace" 입력
+3. 리포지토리 선택: `junwoojeong100/agentic-ai-labs`
+4. Branch 선택: `main`
+
+### 2. Azure 인증
+
+Codespace가 시작되면 터미널에서 Azure에 로그인합니다:
 
 ```bash
-# Azure 로그인
+# Azure Developer CLI 로그인
 azd auth login
-az login
 
-# 리포지토리 디렉토리로 이동
-cd agentic-ai-labs
+# Azure CLI 로그인
+az login
 ```
+
+> **💡 팁**: Codespace 환경에서는 브라우저 기반 인증이 자동으로 열립니다.
 
 ### 2. 실습 노트북 실행
 
@@ -220,12 +305,6 @@ agentic-ai-labs/
 ├── azure.yaml                              # azd 설정
 ├── config.json                             # 배포 설정 (자동 생성)
 └── README.md                               # 이 파일
-```
-
-## 🔧 인프라 파라미터
-```
-
-## 🔧 인프라 파라미터
 ```
 
 ## � Knowledge Base 관리
