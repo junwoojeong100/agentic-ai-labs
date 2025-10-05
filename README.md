@@ -293,24 +293,6 @@ agentic-ai-labs/
 └── README.md                               # 이 파일
 ```
 
-## � Knowledge Base 관리
-
-지식 베이스 문서를 수정하려면:
-
-```bash
-# 1. data/knowledge-base.json 직접 편집
-
-# 2. 또는 스크립트로 생성 (커스텀 마크다운에서)
-python3 scripts/generate_knowledge_base.py
-```
-
-현재 지식 베이스 내용:
-- AI Agent 개발 패턴
-- RAG 구현 방법
-- Model Context Protocol (MCP)
-- 배포 전략
-- 아키텍처 패턴
-
 ## �🔧 인프라 파라미터
 
 `infra/main.parameters.json`에서 커스터마이즈 가능:
