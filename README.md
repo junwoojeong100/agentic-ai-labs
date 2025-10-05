@@ -199,20 +199,6 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
 3. 리포지토리 선택: `junwoojeong100/agentic-ai-labs`
 4. Branch 선택: `main`
 
-### 2. Azure 인증
-
-Codespace가 시작되면 터미널에서 Azure에 로그인합니다:
-
-```bash
-# Azure Developer CLI 로그인
-azd auth login
-
-# Azure CLI 로그인
-az login
-```
-
-> **💡 팁**: Codespace 환경에서는 브라우저 기반 인증이 자동으로 열립니다.
-
 ### 2. 실습 노트북 실행
 
 실습은 3개의 Jupyter 노트북으로 구성되어 있습니다:
