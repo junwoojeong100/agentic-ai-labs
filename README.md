@@ -7,7 +7,6 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
 
---> **상세 구현**: 스키마 생성 코드는 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 섹션 4 "Azure AI Search 인뎁스 생성"을 참고하세요.> **상세 구현**: 스키마 생성 코드는 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 섹션 4 "Azure AI Search 인덱스 생성"을 참고하세요.## 📑 Table of Contents
 1. [개요 (Overview)](#개요-overview)
 2. [아키텍처](#-아키텍처)
 3. [핵심 기능 요약](#핵심-기능-요약)
