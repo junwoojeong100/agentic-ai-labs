@@ -243,8 +243,9 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
    - 5.1. Azure 리소스 확인 (Verify Azure Resources)
    - 5.2. Agent Service 배포 및 권한 설정 (Deploy with Permissions)
    - 5.2.1. Agent Service 시작 (Start Agent Service)
-6. Individual Agent Testing (개별 Agent 테스트)
-7. Main Agent with Connected Agents Testing (통합 테스트)
+6. 배포된 Agent 테스트 (Test Deployed Agent via HTTP)
+   - 6.1. Main Agent 테스트 (다양한 질문)
+   - 6.2. 부하 테스트 (더 많은 데이터 생성)
 
 **주요 내용:**
 - MCP Server를 Azure Container Apps에 배포 (날씨, 계산기 등 도구)
@@ -448,6 +449,55 @@ pip install -r src/mcp/requirements.txt
 ```
 
 **참고:** Azure AI SDK는 빠르게 업데이트되므로 최신 버전 사용을 권장합니다.
+
+### Application Analytics 메트릭이 보이지 않는 경우
+
+**증상:**
+- Azure AI Foundry Portal의 Application Analytics에서 모든 메트릭이 0으로 표시됨
+- Agent가 정상적으로 실행되었음에도 Total inference calls, Average duration, Error rate 등이 기록되지 않음
+
+**원인:**
+Application Analytics는 **Azure Container Apps에 배포된 Agent만** 추적합니다. Jupyter Notebook에서 로컬로 실행한 Agent는 OpenTelemetry 원격 측정이 설정되지 않아 메트릭이 수집되지 않습니다.
+
+**해결 방법:**
+1. **Agent를 Container에 배포** (Lab 3의 섹션 5.2 참조)
+2. **HTTP API를 통해 Agent 호출** (Lab 3의 섹션 6 참조)
+
+**기술적 배경:**
+
+| 실행 환경 | OpenTelemetry 설정 | Managed Identity | Application Analytics |
+|---------|------------------|-----------------|---------------------|
+| **로컬 Notebook** | ❌ 없음 | ❌ DefaultAzureCredential 사용 | ❌ 메트릭 수집 안 됨 |
+| **Container (ACA)** | ✅ `configure_azure_monitor()` | ✅ ManagedIdentityCredential | ✅ 메트릭 수집됨 |
+
+**Container에서만 메트릭이 수집되는 이유:**
+
+1. **OpenTelemetry 구성**: `src/agent/api_server.py`에서 Application Insights로 원격 측정을 전송하도록 설정됨
+   ```python
+   from azure.monitor.opentelemetry import configure_azure_monitor
+   
+   app_insights_conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+   configure_azure_monitor(connection_string=app_insights_conn_str)
+   ```
+
+2. **Managed Identity 인증**: Container App의 Managed Identity가 Azure AI Foundry와 Application Insights에 인증되어 메트릭 전송 가능
+
+3. **환경 변수 설정**: Container에 `APPLICATIONINSIGHTS_CONNECTION_STRING`이 환경 변수로 주입됨
+
+**검증 방법:**
+```bash
+# Container 배포 후 HTTP API로 Agent 호출
+curl -X POST https://<your-agent-endpoint>/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is the weather in Seoul?"}'
+
+# 5-10분 후 Azure AI Foundry Portal에서 Application Analytics 확인
+# https://ai.azure.com > Project > Monitoring > Application Analytics
+```
+
+**참고:**
+- 메트릭이 Portal에 표시되기까지 5-10분 정도 소요될 수 있습니다
+- 더 많은 데이터 포인트를 생성하려면 Lab 3의 섹션 6.2 (부하 테스트)를 실행하세요
 
 ## 📚 참고 자료
 

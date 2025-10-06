@@ -5,3 +5,4 @@ openai>=1.40.0
 python-dotenv>=1.0.0
 fastapi>=0.110.0
 uvicorn>=0.30.0
+azure-monitor-opentelemetry>=1.6.0

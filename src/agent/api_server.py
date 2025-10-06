@@ -94,12 +94,67 @@ async def startup_event():
         )
         logger.info("✅ Azure AI Project Client initialized")
         
+        # ========================================================================
+        # 🔍 Application Analytics Configuration (OpenTelemetry)
+        # ========================================================================
+        # This section configures Azure Monitor OpenTelemetry to send telemetry
+        # data to Application Insights, which powers Application Analytics in
+        # Azure AI Foundry Portal.
+        #
+        # WHY THIS IS REQUIRED:
+        # 1. Local notebook execution does NOT have this configuration
+        # 2. Only containerized agents (deployed to ACA) send telemetry
+        # 3. Azure AI Foundry's Application Analytics ONLY tracks container metrics
+        #
+        # REQUIRED CONDITIONS for metrics to appear:
+        # ✅ Agent must be deployed to Azure Container Apps
+        # ✅ APPLICATIONINSIGHTS_CONNECTION_STRING must be set (environment variable)
+        # ✅ configure_azure_monitor() must be called (below)
+        # ✅ Managed Identity must be authenticated to Azure AI Foundry
+        #
+        # WHAT GETS TRACKED:
+        # - Total inference calls (Agent API requests)
+        # - Average duration (Response time)
+        # - Error rate (Failed requests)
+        # - Token usage (LLM consumption)
+        # - Agent traces (Agent lifecycle events)
+        #
+        # Reference: See README.md > "문제 해결" > "Application Analytics 메트릭이 보이지 않는 경우"
+        # ========================================================================
+        try:
+            # Get Application Insights connection string from environment or project
+            app_insights_conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+            
+            # If not in env, try to get from project connections
+            if not app_insights_conn_str:
+                try:
+                    # Get Application Insights connection from project
+                    from azure.ai.projects.models import ConnectionType
+                    connections = project_client.connections.list(connection_type=ConnectionType.AZURE_AI_SERVICES)
+                    for conn in connections:
+                        if hasattr(conn, 'properties') and hasattr(conn.properties, 'application_insights_connection_string'):
+                            app_insights_conn_str = conn.properties.application_insights_connection_string
+                            break
+                except Exception as conn_error:
+                    logger.warning(f"Could not get App Insights from connections: {conn_error}")
+            
+            if app_insights_conn_str:
+                from azure.monitor.opentelemetry import configure_azure_monitor
+                configure_azure_monitor(connection_string=app_insights_conn_str)
+                logger.info("✅ Azure Monitor OpenTelemetry configured for Application Analytics")
+            else:
+                logger.warning("⚠️  Application Insights connection string not found")
+                logger.warning("   Set APPLICATIONINSIGHTS_CONNECTION_STRING environment variable")
+        except Exception as e:
+            logger.error(f"❌ Failed to configure OpenTelemetry: {e}")
+            logger.error("   Application Analytics will not show metrics")
+        
         # Create sub-agents
         mcp_endpoint = os.getenv("MCP_ENDPOINT")
         
         # 1. Tool Agent (MCP)
         logger.info(f"Creating Tool Agent (MCP: {mcp_endpoint})...")
-        tool_agent = ToolAgent(project_client=project_client, mcp_server_url=mcp_endpoint)
+        tool_agent = ToolAgent(project_client=project_client, mcp_endpoint=mcp_endpoint)
         tool_agent_id = await tool_agent.create()
         logger.info(f"✅ Tool Agent created: {tool_agent_id}")
         
@@ -145,7 +200,7 @@ async def startup_event():
 
 @app.get("/")
 async def root():
-    """Health check endpoint"""
+    """Root endpoint"""
     return {
         "status": "running",
         "service": "Agent API Server",
@@ -154,6 +209,14 @@ async def root():
             "tool_agent": tool_agent is not None,
             "research_agent": research_agent is not None
         }
+    }
+
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "service": "Agent API Server"
     }
 
 @app.post("/chat", response_model=AgentResponse)
