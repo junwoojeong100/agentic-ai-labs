@@ -19,10 +19,9 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 10. [Knowledge Base 관리](#-knowledge-base-관리)
 11. [Troubleshooting (요약)](#-문제-해결)
 12. [Cleanup](#-리소스-정리-cleanup)
-13. [Observability (Monitoring & Tracing)](#-observability-monitoring--tracing)
-14. [참고 자료](#-참고-자료)
-15. [기여하기](#-기여하기)
-16. [라이선스](#-라이선스)
+13. [참고 자료](#-참고-자료)
+14. [기여하기](#-기여하기)
+15. [라이선스](#-라이선스)
 
 > 상세 관찰성(Tracing, Analytics) 심화는 별도 문서: `OBSERVABILITY.md`
 
@@ -645,22 +644,6 @@ pip install -r src/mcp/requirements.txt
 ```
 
 **참고:** Azure AI SDK는 빠르게 업데이트되므로 최신 버전 사용을 권장합니다.
-
-## 🔍 Observability (Monitoring & Tracing)
-
-**모든 상세 가이드는 [`OBSERVABILITY.md`](./OBSERVABILITY.md)로 이동했습니다.**
-
-> **핵심 포인트**: Lab 3 완료 후 Agent의 실행 흐름, 프롬프트/응답, 오류 추적을 위해 Application Insights + OpenTelemetry를 사용합니다.
-
-### 필수 참고 문서
-- 📊 **메트릭 0 문제 해결**: [섹션 13](./OBSERVABILITY.md#13-application-analytics-메트릭이-보이지-않는-경우)
-- 🔧 **계측 순서**: [섹션 4](./OBSERVABILITY.md#4-계측-순서-order-matters)
-- 🔍 **Kusto 쿼리**: [섹션 8](./OBSERVABILITY.md#8-kusto-quick-queries)
-- ⚙️ **운영 전략**: [섹션 6](./OBSERVABILITY.md#6-content-recording-운영-전략)
-- 🐛 **문제 해결**: [섹션 9](./OBSERVABILITY.md#9-troubleshooting-top-6)
-
-**실습 중 observability 관련 이슈가 발생하면 반드시 OBSERVABILITY.md를 참고하세요.**
-
 
 
 ## 📚 참고 자료
