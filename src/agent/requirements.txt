@@ -1,8 +1,12 @@
-azure-ai-projects>=1.0.0b9
+azure-ai-projects>=1.0.0b10
 azure-identity>=1.17.0
 azure-search-documents>=11.5.0
-openai>=1.40.0
+azure-ai-inference>=1.0.0b6
+openai>=1.50.0
 python-dotenv>=1.0.0
 fastapi>=0.110.0
 uvicorn>=0.30.0
 azure-monitor-opentelemetry>=1.6.0
+azure-monitor-opentelemetry-exporter>=1.0.0b27
+opentelemetry-instrumentation-requests>=0.45b0
+opentelemetry-instrumentation-httpx>=0.45b0

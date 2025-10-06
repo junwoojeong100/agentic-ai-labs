@@ -318,24 +318,42 @@ This agent has access to MCP (Model Context Protocol) tools and can execute real
         import time
         
         try:
-            # Create thread
-            thread = self.project_client.agents.threads.create()
-            logger.info(f"[thread] {thread.id}")
+            # ========================================================================
+            # 🔍 OpenTelemetry Span for Tool Agent Execution Tracing
+            # ========================================================================
+            from opentelemetry import trace
+            tracer = trace.get_tracer(__name__)
             
-            # Add user message
-            self.project_client.agents.messages.create(
-                thread_id=thread.id,
-                role="user",
-                content=message
-            )
-            logger.info(f"[message] User message added to thread")
+            with tracer.start_as_current_span("tool_agent_run") as span:
+                # Gen AI semantic conventions
+                span.set_attribute("gen_ai.system", "azure_ai_agent")
+                span.set_attribute("gen_ai.request.model", self.model)
+                span.set_attribute("gen_ai.prompt", message)
+                span.set_attribute("agent.id", self.agent_id)
+                span.set_attribute("agent.name", self.name)
+                span.set_attribute("agent.type", "tool_agent")
+                
+                # Create thread
+                thread = self.project_client.agents.threads.create()
+                logger.info(f"[thread] {thread.id}")
+                span.set_attribute("thread.id", thread.id)
             
-            # Create and process run
-            run = self.project_client.agents.runs.create_and_process(
-                thread_id=thread.id,
-                agent_id=self.agent_id
-            )
-            logger.info(f"[run] {run.id} status={run.status}")
+                # Add user message
+                self.project_client.agents.messages.create(
+                    thread_id=thread.id,
+                    role="user",
+                    content=message
+                )
+                logger.info(f"[message] User message added to thread")
+                
+                # Create and process run
+                run = self.project_client.agents.runs.create_and_process(
+                    thread_id=thread.id,
+                    agent_id=self.agent_id
+                )
+                logger.info(f"[run] {run.id} status={run.status}")
+                span.set_attribute("run.id", run.id)
+                span.set_attribute("run.status", run.status)
             
             # Check for errors
             if run.status == "failed":
@@ -371,8 +389,12 @@ This agent has access to MCP (Model Context Protocol) tools and can execute real
                                 response_text = str(text_obj)
                             break
                     
-                    if response_text:
-                        break
+                
+                if response_text:
+                    # Log output to span for Tracing UI
+                    span.set_attribute("gen_ai.completion", response_text)
+                    span.set_attribute("gen_ai.response.finish_reason", "stop")
+                    break
             
             if not response_text:
                 logger.warning("No assistant response found")

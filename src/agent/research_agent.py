@@ -176,45 +176,70 @@ This agent has access to a comprehensive knowledge base via Azure AI Search."""
             Agent response
         """
         try:
-            # Create thread (thread_id parameter not supported in current SDK)
-            thread = self.project_client.agents.threads.create()
+            # ========================================================================
+            # 🔍 OpenTelemetry Span for Research Agent Execution Tracing
+            # ========================================================================
+            from opentelemetry import trace
+            tracer = trace.get_tracer(__name__)
             
-            # Add message to thread
-            self.project_client.agents.messages.create(
-                thread_id=thread.id,
-                role="user",
-                content=message
-            )
-            
-            # Run the agent
-            run = self.project_client.agents.runs.create_and_process(
-                thread_id=thread.id,
-                agent_id=self.agent_id
-            )
-            
-            # Get the response
-            messages = self.project_client.agents.messages.list(thread_id=thread.id)
-            
-            # Convert ItemPaged to list for easier debugging
-            messages_list = list(messages)
-            logger.info(f"Retrieved {len(messages_list)} messages from thread")
-            
-            # Messages are returned in reverse chronological order (newest first)
-            for msg in messages_list:
-                logger.info(f"Message role: {msg.role}, has content: {hasattr(msg, 'content')}")
-                if msg.role == "assistant":
-                    # Content is a list of content parts
-                    if hasattr(msg, 'content') and msg.content:
-                        logger.info(f"Assistant message content parts: {len(msg.content)}")
-                        for content_part in msg.content:
-                            # Each content part has a 'type' and type-specific data
-                            if hasattr(content_part, 'text'):
-                                response_text = content_part.text.value
-                                logger.info(f"Found response: {response_text[:100]}...")
-                                return response_text
-            
-            logger.warning("No assistant response found in messages")
-            return "No response generated"
+            with tracer.start_as_current_span("research_agent_run") as span:
+                # Gen AI semantic conventions
+                span.set_attribute("gen_ai.system", "azure_ai_agent")
+                span.set_attribute("gen_ai.request.model", self.model)
+                span.set_attribute("gen_ai.prompt", message)
+                span.set_attribute("agent.id", self.agent_id)
+                span.set_attribute("agent.name", self.name)
+                span.set_attribute("agent.type", "research_agent")
+                
+                # Create thread (thread_id parameter not supported in current SDK)
+                thread = self.project_client.agents.threads.create()
+                span.set_attribute("thread.id", thread.id)
+                
+                # Add message to thread
+                self.project_client.agents.messages.create(
+                    thread_id=thread.id,
+                    role="user",
+                    content=message
+                )
+                
+                # Run the agent
+                run = self.project_client.agents.runs.create_and_process(
+                    thread_id=thread.id,
+                    agent_id=self.agent_id
+                )
+                span.set_attribute("run.id", run.id)
+                span.set_attribute("run.status", run.status)
+                
+                # Get the response
+                messages = self.project_client.agents.messages.list(thread_id=thread.id)
+                
+                # Convert ItemPaged to list for easier debugging
+                messages_list = list(messages)
+                logger.info(f"Retrieved {len(messages_list)} messages from thread")
+                span.set_attribute("messages.count", len(messages_list))
+                
+                # Messages are returned in reverse chronological order (newest first)
+                for msg in messages_list:
+                    logger.info(f"Message role: {msg.role}, has content: {hasattr(msg, 'content')}")
+                    if msg.role == "assistant":
+                        # Content is a list of content parts
+                        if hasattr(msg, 'content') and msg.content:
+                            logger.info(f"Assistant message content parts: {len(msg.content)}")
+                            for content_part in msg.content:
+                                # Each content part has a 'type' and type-specific data
+                                if hasattr(content_part, 'text'):
+                                    response_text = content_part.text.value
+                                    logger.info(f"Found response: {response_text[:100]}...")
+                                    
+                                    # Log output to span for Tracing UI
+                                    span.set_attribute("gen_ai.completion", response_text)
+                                    span.set_attribute("gen_ai.response.finish_reason", "stop")
+                                    span.set_attribute("gen_ai.usage.output_tokens", len(response_text.split()))
+                                    
+                                    return response_text
+                
+                logger.warning("No assistant response found in messages")
+                return "No response generated"
             
         except Exception as e:
             logger.error(f"Error running research agent: {e}")

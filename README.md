@@ -1,17 +1,65 @@
 # Azure AI Foundry Agent Service Lab
 
-Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다.
+Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
 
-## 🎯 실습 개요
+---
 
-이 실습은 **GitHub Codespace** 환경에서 진행되도록 설계되었으며, 다음 내용을 다룹니다:
+## 📑 Table of Contentsdry Agent Service Lab
 
-1. **Azure 리소스 배포** - Bicep과 Azure Developer CLI를 사용한 인프라 배포
-2. **AI Search RAG 구성** - 벡터 검색 기반 지식 베이스 구축
-3. **Multi-Agent 시스템 구축** - Main Agent, Tool Agent (MCP 연동), Research Agent (RAG) 구현 및 오케스트레이션
+Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
+
+---
+## # Azure AI Foundry Agent Service Lab
+
+Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
+
+---
+## � Table of Contents📑 Table of Contentsre AI Foundry Agent Service Lab
+
+Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
+
+--> **상세 구현**: 스키마 생성 코드는 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 섹션 4 "Azure AI Search 인뎁스 생성"을 참고하세요.> **상세 구현**: 스키마 생성 코드는 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 섹션 4 "Azure AI Search 인덱스 생성"을 참고하세요.## 📑 Table of Contents
+1. [개요 (Overview)](#개요-overview)
+2. [아키텍처](#-아키텍처)
+3. [핵심 기능 요약](#핵심-기능-요약)
+4. [사전 요구사항](#-사전-요구사항)
+5. [빠른 시작 (Quick Start)](#-빠른-시작)
+6. [Lab 안내](#lab-안내)
+7. [프로젝트 구조](#-프로젝트-구조)
+8. [인프라 & 파라미터](#-인프라-파라미터)
+9. [환경 변수 & 설정](#환경-변수--설정)
+10. [Knowledge Base 관리](#-knowledge-base-관리)
+11. [Troubleshooting (요약)](#-문제-해결)
+12. [Cleanup](#-리소스-정리-cleanup)
+13. [Observability (Monitoring & Tracing)](#-observability-monitoring--tracing)
+14. [참고 자료](#-참고-자료)
+15. [기여하기](#-기여하기)
+16. [라이선스](#-라이선스)
+
+> 상세 관찰성(Tracing, Analytics) 심화는 별도 문서: `OBSERVABILITY.md`
+
+---
+## 🎯 개요 (Overview)
+
+이 실습은 **GitHub Codespace** 환경에서 진행되도록 설계되었으며, 다음 Core Pillars를 다룹니다:
+
+| Pillar | 설명 | 핵심 요소 |
+|--------|------|-----------|
+| Multi-Agent Orchestration | Main / Tool / Research Agent 연결 및 라우팅 | Connected Agents, MCP, RAG | 
+| Retrieval-Augmented Generation | Azure AI Search 기반 지식 검색 결합 | Hybrid (Vector + BM25), Embeddings |
+| Tool & Protocol Integration | MCP(Model Context Protocol) 도구 호출 | FastMCP, External Utilities |
+| Observability & Tracing | Prompt/Completion 포함 실행 추적 | OpenTelemetry, Application Insights |
 
 > **💡 실습 환경**  
-> 이 실습은 GitHub Codespace에서 실행되도록 최적화되어 있습니다. 모든 필수 도구(Azure CLI, azd, Python, Docker 등)가 사전 구성되어 있어 별도의 로컬 환경 설정 없이 바로 시작할 수 있습니다.
+> GitHub Codespace에 최적화되어 사전 도구(Azure CLI, azd, Python, Docker)가 준비되어 별도 설치가 최소화됩니다.
+
+**학습 후 할 수 있는 것 (Learning Outcomes)**
+- Azure AI Foundry Project 기반 Multi-Agent 시스템 아키텍처 이해 및 배포
+- RAG + MCP + Orchestration 결합 패턴 구현
+- Application Analytics vs Tracing 차이와 활용 전략 수립
+- Prompt/Completion(Content Recording) 포함 추적 및 운영 시 마스킹/샘플링 고려 적용
+
+**요약 TL;DR**: “이 레포는 RAG + MCP + Multi-Agent + Observability(Tracing + Analytics)를 한 번에 실습하는 통합 패턴 모음입니다.”
 
 ## 🏗️ 아키텍처
 
@@ -39,11 +87,11 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 ### 주요 컴포넌트
 
 - **Main Agent**: 사용자 요청 분석 및 Connected Agent를 통한 하위 Agent 라우팅
-- **Tool Agent**: MCP 서버의 도구 활용 (날씨, 계산기, 시간, 랜덤 숫자)
+- **Tool Agent**: MCP 서버의 도구 활용 (실시간 날씨 정보)
 - **Research Agent**: Azure AI Search를 통한 RAG 기반 지식 베이스 검색
 - **MCP Server**: Azure Container Apps에 배포된 FastMCP 기반 도구 서버
 
-## �️ 주요 기능
+## ⚙️ 핵심 기능 요약
 
 ### Azure AI Foundry Agent Service
 - **Agent 생성 및 관리**: GPT-4o 기반 전문화된 Agent
@@ -59,7 +107,7 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
   
 - **Tool Agent**:
   - MCP 서버와 연동하여 외부 도구 활용
-  - 날씨, 계산, 시간, 랜덤 숫자 등 유틸리티 기능
+  - **실시간 날씨 정보**: 전 세계 도시의 정확한 날씨 데이터 제공
   - HTTP 기반 MCP 클라이언트 구현
   
 - **Research Agent**:
@@ -68,14 +116,20 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
   - 지식 베이스 기반 답변 생성
 
 ### MCP (Model Context Protocol) Server
-- **제공 도구**:
-  - `get_weather`: 도시별 날씨 정보
-  - `calculate`: 수학 계산
-  - `get_current_time`: 현재 시간
-  - `generate_random_number`: 랜덤 숫자 생성
+- **실시간 날씨 정보 서비스**:
+  - `get_weather(location)`: 전 세계 도시의 정확한 실시간 날씨 정보
+  - **데이터 소스**: wttr.in API (무료, API 키 불필요)
+  - **지원 언어**: 한글/영어 도시명 모두 지원 (예: 'Seoul', '서울')
+  - **제공 정보**: 
+    - 현재 온도 및 체감 온도
+    - 날씨 상태 (맑음, 흐림, 비 등)
+    - 습도 및 풍속/풍향
+    - 관측 시간
 - **FastMCP 프레임워크**: Python 기반 간편한 MCP 서버 구현
 - **Azure Container Apps 배포**: 확장 가능한 서버리스 호스팅
 - **HTTP/SSE 엔드포인트**: `/mcp` 경로로 MCP 프로토콜 제공
+
+> **개선 사항**: 이전의 랜덤 Mock 데이터 대신 실제 날씨 API를 사용하여 정확한 정보를 제공합니다. 1개의 기능에 집중하여 더 높은 품질과 신뢰성을 보장합니다.
 
 ### RAG (Retrieval-Augmented Generation)
 - **Azure AI Search 통합**: 벡터 + 키워드 하이브리드 검색
@@ -83,12 +137,42 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 - **지식 베이스**: 54개 AI Agent 관련 문서 (카테고리별 청킹)
 - **검색 최적화**: Top-K=5, Semantic Ranker 적용
 
-## �🔧 주요 설정
+#### 📐 RAG 인덱스 스키마
+
+**Lab 2에서 실제로 생성하는 인덱스 스키마는 다음과 같습니다:**
+
+| 필드 | 타입 | 용도 | 벡터 설정 |
+|------|------|------|----------|
+| **id** | Edm.String | 문서 고유 식별자 (key) | - |
+| **title** | Edm.String | 문서 제목 (searchable, filterable) | - |
+| **content** | Edm.String | 본문 전체 텍스트 (searchable) | - |
+| **category** | Edm.String | 문서 분류 (filterable, facetable) | - |
+| **section** | Edm.String | 섹션 이름 (filterable) | - |
+| **contentVector** | Collection(Single) | 텍스트 임베딩 벡터 | dimensions=**3072** (text-embedding-3-large) |
+
+**중요 구성 사항:**
+
+1. **벡터 검색 알고리즘**: HNSW (Hierarchical Navigable Small World)
+   - `m`: 4 (연결 수)
+   - `efConstruction`: 400 (인덱싱 품질)
+   - `metric`: cosine (코사인 유사도)
+
+2. **하이브리드 검색**: 
+   - Vector Search (contentVector 필드, 3072차원)
+   - Keyword Search (title, content 필드, BM25 알고리즘)
+
+3. **필수 일치 사항**:
+   - ⚠️ `contentVector` 차원은 **반드시 3072**이어야 합니다 (text-embedding-3-large 모델 출력)
+   - 1536차원(text-embedding-3-small)과 호환되지 않음
+
+> **상세 구현**: 스키마 생성 코드는 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 섹션 4 "Azure AI Search 인덱스 생성"을 참조하세요.
+
+## 🧩 인프라 & 리소스 개요
 
 ### 배포 후 생성되는 리소스
 
 | 리소스 | 용도 | 특징 |
-|-------|------|------|
+|--------|------|------|
 | Azure AI Foundry Project | Agent 및 AI 서비스 통합 | **Hub-less 독립형 프로젝트 (GA)** |
 | Azure OpenAI | GPT-4o 모델, 텍스트 임베딩 | text-embedding-3-large 포함 |
 | Azure AI Search | RAG 지식 베이스 | 벡터 검색, 하이브리드 쿼리 |
@@ -108,7 +192,7 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 > - Container Apps에서 Key Vault Reference를 통한 시크릿 주입
 > - Managed Identity 기반 접근 제어
 
-## 📋 사전 요구사항
+## ✅ 사전 요구사항
 
 ### 실습 환경: GitHub Codespace
 
@@ -174,6 +258,7 @@ Codespace가 시작되면 다음 도구들이 자동으로 설치되어 있습�
 >    - 별도의 개발/학습 환경 사용 권장
 
 **권한 확인 방법:**
+
 ```bash
 # 현재 사용자의 역할 확인
 az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv) --all
@@ -183,7 +268,7 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
   --role Owner --scope /subscriptions/$(az account show --query id -o tsv)
 ```
 
-## 🚀 빠른 시작
+## 🚀 빠른 시작 (Quick Start)
 
 ### 1. GitHub Codespace 시작
 
@@ -244,15 +329,16 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
    - 5.2. Agent Service 배포 및 권한 설정 (Deploy with Permissions)
    - 5.2.1. Agent Service 시작 (Start Agent Service)
 6. 배포된 Agent 테스트 (Test Deployed Agent via HTTP)
-   - 6.1. Main Agent 테스트 (다양한 질문)
-   - 6.2. 부하 테스트 (더 많은 데이터 생성)
 
 **주요 내용:**
 - MCP Server를 Azure Container Apps에 배포 (날씨, 계산기 등 도구)
 - Multi-Agent 시스템 구축 (Main, Tool, Research Agent)
 - Managed Identity 기반 RBAC 권한 설정
 - Connected Agent 패턴으로 Agent 간 협업 구현
-- 실제 질의를 통한 Multi-Agent 오케스트레이션 테스트
+- **자동 환경 변수 설정**: Application Insights + OpenTelemetry 설정이 `.env` 파일에 자동 생성
+- **10개의 다양한 테스트 케이스**: Tool Agent(5), Research Agent(3), 복합 질의(2)
+- 실제 질의를 통한 Multi-Agent 오케스트레이션 검증
+
 
 ## 📁 프로젝트 구조
 
@@ -294,7 +380,7 @@ agentic-ai-labs/
 └── README.md                               # 이 파일
 ```
 
-## �🔧 인프라 파라미터
+## �️ 인프라 파라미터
 
 `infra/main.parameters.json`에서 커스터마이즈 가능:
 
@@ -306,7 +392,7 @@ agentic-ai-labs/
 
 주요 리소스는 Bicep 템플릿에서 자동으로 생성되며, 리소스 이름은 고유성을 위해 해시가 추가됩니다.
 
-### 환경 변수
+## 🌐 환경 변수 & 설정
 
 배포 후 `config.json`에 자동 저장되는 설정:
 
@@ -331,6 +417,121 @@ agentic-ai-labs/
 - `mcp_endpoint`: 배포된 MCP 서버 엔드포인트
 - `agent_endpoint`: Agent API 서버 엔드포인트 (향후 REST API 제공)
 
+### Agent Container 환경 변수 (현행화)
+
+Lab 3 실행 시 `src/agent/.env` 파일이 **자동 생성**되며 아래 구조를 기본 포함합니다. 일부 선택 변수는 목적에 따라 추가됩니다.
+
+```properties
+# Azure AI Foundry
+PROJECT_CONNECTION_STRING=https://xxx.services.ai.azure.com/api/projects/yyy
+
+# Azure AI Search (RAG)
+SEARCH_ENDPOINT=https://srch-xxx.search.windows.net/
+SEARCH_KEY=xxx
+SEARCH_INDEX=ai-agent-knowledge-base
+
+# MCP Server
+MCP_ENDPOINT=https://mcp-server.xxx.azurecontainerapps.io
+
+# Application Insights (Metrics / Logs / Traces Export)
+APPLICATIONINSIGHTS_CONNECTION_STRING=InstrumentationKey=xxx;...
+
+# OpenTelemetry Core
+OTEL_SERVICE_NAME=azure-ai-agent
+OTEL_TRACES_EXPORTER=azure_monitor
+OTEL_METRICS_EXPORTER=azure_monitor
+OTEL_LOGS_EXPORTER=azure_monitor
+OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED=true
+
+# GenAI Content Recording (Prompt/Completion 표시; Dev/Debug 권장)
+AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true
+
+# (선택) PII 마스킹 / 운영 모드 전략
+AGENT_MASKING_MODE=standard  # standard|strict|off (코드에서 선택적으로 활용)
+
+# (선택) 샘플링 – 고트래픽 환경에서 비용/저장 최적화
+# OTEL_TRACES_SAMPLER=parentbased_traceidratio
+# OTEL_TRACES_SAMPLER_ARG=0.2   # 20% 샘플링 예시
+
+# (선택) PII 마스킹 정책 커스텀 플래그 (코드에서 해석 구현 가능)
+# AGENT_MASKING_MODE=standard   # standard|strict|off
+```
+
+#### 필수 / 선택 구분
+| 분류 | 변수 | 설명 |
+|------|------|------|
+| 필수 | PROJECT_CONNECTION_STRING | AI Foundry Project 식별자 |
+| 필수 | SEARCH_ENDPOINT / SEARCH_KEY / SEARCH_INDEX | RAG 인덱스 접근 |
+| 필수 | MCP_ENDPOINT | MCP 도구 호출 경로 |
+| 필수 | APPLICATIONINSIGHTS_CONNECTION_STRING | App Insights Export 대상 |
+| 필수 | OTEL_SERVICE_NAME | 서비스 논리 이름(Trace Grouping) |
+| 권장 | AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED | Tracing UI Input/Output 표시 |
+| 선택 | OTEL_TRACES_SAMPLER / ARG | 트레이스 비율 조절 |
+| 선택 | AGENT_MASKING_MODE | 프롬프트/응답 마스킹 전략 선택 |
+
+> `AGENT_MASKING_MODE` 는 제공되는 샘플 마스킹 유틸(`src/agent/masking.py`)과 연동하여 prompt/completion 기록 전 민감정보 기본 정규식 마스킹을 적용할 때 사용할 수 있습니다. (없으면 무시)
+
+#### Content Recording 운영 가이드
+| 환경 | 권장 값 | 비고 |
+|------|---------|------|
+| Dev / QA | true | 디버깅/튜닝 편의 |
+| Staging | true + 마스킹 | 실제 유사 데이터 검증 |
+| Prod (민감) | false (또는 요약 후 저장) | 규제/보안 고려 |
+| Prod (비민감) | true + 샘플링 | 품질/행동 분석 |
+
+#### 중요 사항
+- 이 `.env` 는 **이미지 빌드 시 포함** → 값 변경 후 반드시 재빌드 & 재배포 필요
+- 민감 키는 Git에 커밋 금지 (`.gitignore` 유지)
+- 샘플링 활성화 시 Tracing UI 일부 요청만 표시될 수 있음(의도된 동작)
+- Content Recording 비활성화 시에도 메트릭은 계속 전송됨
+
+#### 변경 적용 절차 (요약)
+1. `.env` 수정 (또는 Lab 3 재생성 셀 실행)
+2. Docker 이미지 재빌드
+3. Container Apps 새 revision 배포
+4. (선택) Kusto Logs로 반영 여부 즉시 확인
+
+---
+## 🧹 리소스 정리 (Cleanup)
+학습 완료 후 비용을 줄이기 위해 전체 리소스를 제거하려면 **리소스 그룹 삭제**가 가장 간단합니다.
+
+```bash
+# config.json 에서 resource_group 값 확인
+cat config.json | grep resource_group
+
+# 리소스 그룹 삭제 (복구 불가 주의)
+az group delete --name <resource-group-name> --yes --no-wait
+```
+
+세부적으로 선택 삭제를 원할 경우:
+```bash
+# Container Apps 환경 & 앱 목록
+az containerapp list --resource-group <rg> -o table
+
+# AI Search 인덱스 삭제
+az search index delete --name ai-agent-knowledge-base \
+  --service-name <search-service-name> \
+  --resource-group <rg>
+
+# ACR 이미지 목록/삭제
+az acr repository list --name <acrName> -o table
+az acr repository delete --name <acrName> --image agent-service:latest --yes
+az acr repository delete --name <acrName> --image mcp-server:latest --yes
+```
+
+> 삭제 전 비용 추적은 Azure Portal > Cost Management 또는 `az costmanagement query` 사용.
+
+---
+
+#### 검증 Kusto (Content Recording & 샘플링 확인)
+```kusto
+dependencies
+| where timestamp > ago(30m)
+| where name contains "ChatCompletions" or customDimensions has "gen_ai.prompt"
+| summarize count() by bin(timestamp, 5m)
+```
+> 상세 OpenTelemetry / Tracing 구성 흐름은 `OBSERVABILITY.md` 문서를 참고하세요.
+
 ### Azure Developer CLI (azd) 설정
 
 `azure.yaml` 파일은 azd 배포를 위한 메타데이터를 정의합니다:
@@ -347,12 +548,19 @@ infra:
   module: main
 ```
 
-**참고:** 
-- 현재 `azure.yaml`에는 사용하지 않는 서비스 정의가 포함되어 있을 수 있습니다
-- 실제 배포는 노트북(Lab 3)에서 `az containerapp create` 명령으로 수동 진행됩니다
-- azd 기반 자동 배포는 향후 개선 예정입니다
+**azd 사용 범위:**
+- **Lab 1**: `azd up` 명령으로 Azure 인프라 배포 (Bicep 템플릿 기반)
+  - Azure AI Foundry Project, OpenAI, AI Search, Container Apps Environment 등 생성
+- **Lab 3**: Container 배포는 `az containerapp create` 명령으로 수동 진행
+  - MCP Server 및 Agent Service 배포
+  - 더 세밀한 제어와 학습 목적으로 수동 배포 방식 사용
 
-## � Knowledge Base 관리
+**참고:** 
+- azd는 인프라 프로비저닝(Lab 1)에 주로 사용됩니다
+- 애플리케이션 배포(Lab 3)는 학습 목적상 단계별로 수동 실행합니다
+- 향후 azd 기반 전체 자동 배포로 개선 예정입니다
+
+## 📚 Knowledge Base 관리
 
 지식 베이스 문서를 수정하려면:
 
@@ -370,7 +578,7 @@ python3 scripts/generate_knowledge_base.py
 - 배포 전략
 - 아키텍처 패턴
 
-## �🐛 문제 해결
+## 🐛 문제 해결 (요약 Troubleshooting)
 
 ### Agent 생성 실패
 ```bash
@@ -450,54 +658,22 @@ pip install -r src/mcp/requirements.txt
 
 **참고:** Azure AI SDK는 빠르게 업데이트되므로 최신 버전 사용을 권장합니다.
 
-### Application Analytics 메트릭이 보이지 않는 경우
+## 🔍 Observability (Monitoring & Tracing)
 
-**증상:**
-- Azure AI Foundry Portal의 Application Analytics에서 모든 메트릭이 0으로 표시됨
-- Agent가 정상적으로 실행되었음에도 Total inference calls, Average duration, Error rate 등이 기록되지 않음
+**모든 상세 가이드는 [`OBSERVABILITY.md`](./OBSERVABILITY.md)로 이동했습니다.**
 
-**원인:**
-Application Analytics는 **Azure Container Apps에 배포된 Agent만** 추적합니다. Jupyter Notebook에서 로컬로 실행한 Agent는 OpenTelemetry 원격 측정이 설정되지 않아 메트릭이 수집되지 않습니다.
+> **핵심 포인트**: Lab 3 완료 후 Agent의 실행 흐름, 프롬프트/응답, 오류 추적을 위해 Application Insights + OpenTelemetry를 사용합니다.
 
-**해결 방법:**
-1. **Agent를 Container에 배포** (Lab 3의 섹션 5.2 참조)
-2. **HTTP API를 통해 Agent 호출** (Lab 3의 섹션 6 참조)
+### 필수 참고 문서
+- 📊 **메트릭 0 문제 해결**: [섹션 13](./OBSERVABILITY.md#13-application-analytics-메트릭이-보이지-않는-경우)
+- 🔧 **계측 순서**: [섹션 4](./OBSERVABILITY.md#4-계측-순서-order-matters)
+- 🔍 **Kusto 쿼리**: [섹션 8](./OBSERVABILITY.md#8-kusto-quick-queries)
+- ⚙️ **운영 전략**: [섹션 6](./OBSERVABILITY.md#6-content-recording-운영-전략)
+- 🐛 **문제 해결**: [섹션 9](./OBSERVABILITY.md#9-troubleshooting-top-6)
 
-**기술적 배경:**
+**실습 중 observability 관련 이슈가 발생하면 반드시 OBSERVABILITY.md를 참고하세요.**
 
-| 실행 환경 | OpenTelemetry 설정 | Managed Identity | Application Analytics |
-|---------|------------------|-----------------|---------------------|
-| **로컬 Notebook** | ❌ 없음 | ❌ DefaultAzureCredential 사용 | ❌ 메트릭 수집 안 됨 |
-| **Container (ACA)** | ✅ `configure_azure_monitor()` | ✅ ManagedIdentityCredential | ✅ 메트릭 수집됨 |
 
-**Container에서만 메트릭이 수집되는 이유:**
-
-1. **OpenTelemetry 구성**: `src/agent/api_server.py`에서 Application Insights로 원격 측정을 전송하도록 설정됨
-   ```python
-   from azure.monitor.opentelemetry import configure_azure_monitor
-   
-   app_insights_conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
-   configure_azure_monitor(connection_string=app_insights_conn_str)
-   ```
-
-2. **Managed Identity 인증**: Container App의 Managed Identity가 Azure AI Foundry와 Application Insights에 인증되어 메트릭 전송 가능
-
-3. **환경 변수 설정**: Container에 `APPLICATIONINSIGHTS_CONNECTION_STRING`이 환경 변수로 주입됨
-
-**검증 방법:**
-```bash
-# Container 배포 후 HTTP API로 Agent 호출
-curl -X POST https://<your-agent-endpoint>/chat \
-  -H "Content-Type: application/json" \
-  -d '{"message": "What is the weather in Seoul?"}'
-
-# 5-10분 후 Azure AI Foundry Portal에서 Application Analytics 확인
-# https://ai.azure.com > Project > Monitoring > Application Analytics
-```
-
-**참고:**
-- 메트릭이 Portal에 표시되기까지 5-10분 정도 소요될 수 있습니다
-- 더 많은 데이터 포인트를 생성하려면 Lab 3의 섹션 6.2 (부하 테스트)를 실행하세요
 
 ## 📚 참고 자료
 

@@ -1,8 +1,8 @@
 """
-MCP Server for Azure AI Foundry Agent Service
+MCP Server for Azure AI Foundry Agent Service - Weather Information Service
 
-Provides tools via Model Context Protocol (MCP) using FastMCP with Streamable HTTP transport.
-Runs with Streamable HTTP transport at http://0.0.0.0:8000/mcp by default.
+Provides accurate weather information via Model Context Protocol (MCP) using FastMCP 
+with Streamable HTTP transport. Runs at http://0.0.0.0:8000/mcp by default.
 
 Run locally:
   python server.py
@@ -10,19 +10,25 @@ Run locally:
 Run in Azure Container Apps:
   Deployed automatically via Docker (see Dockerfile)
 
+Weather Data Provider:
+  - Primary: OpenWeatherMap API (https://openweathermap.org)
+  - Fallback: wttr.in free service (https://wttr.in)
+  
 Tools provided:
-  - get_weather(location): Get weather information for a city
-  - calculate(expression): Perform mathematical calculations
-  - get_current_time(): Get current date and time
-  - generate_random_number(min, max): Generate random integer
+  - get_weather(location): Get real-time weather information for any city worldwide
+    * Supports Korean/English city names
+    * Returns temperature, conditions, humidity, wind speed, feels-like temp
+    * No API key required (uses wttr.in free service)
 """
 from __future__ import annotations
 
 import os
 import random
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional
+import asyncio
 
+import httpx
 from mcp.server.fastmcp import FastMCP
 
 # Server configuration
@@ -32,11 +38,12 @@ MOUNT_PATH = os.environ.get("MCP_MOUNT_PATH", "/mcp")
 
 # Create FastMCP server
 mcp = FastMCP(
-    name="Azure Foundry MCP Server",
+    name="Azure Foundry Weather MCP Server",
     instructions=(
-        "This MCP server exposes tools for Azure AI Foundry Agent Service: "
-        "get_weather(location), calculate(expression), get_current_time(), "
-        "and generate_random_number(min, max)."
+        "This MCP server provides accurate real-time weather information for any city worldwide. "
+        "It supports Korean and English city names. Use get_weather(location) to get current weather conditions, "
+        "temperature, humidity, wind speed, and more. The service uses wttr.in API which provides reliable "
+        "weather data without requiring API keys."
     ),
 )
 
@@ -48,103 +55,102 @@ mcp = FastMCP(
 @mcp.tool()
 async def get_weather(location: str) -> Dict[str, Any]:
     """
-    Get current weather information for a city.
+    Get accurate real-time weather information for any city worldwide.
+    
+    This tool uses wttr.in, a reliable weather service that provides:
+    - Current temperature and feels-like temperature
+    - Weather conditions (clear, cloudy, rainy, etc.)
+    - Humidity percentage
+    - Wind speed and direction
+    - Observation time
     
     Args:
-        location: City name (e.g., "Seoul", "Tokyo", "San Francisco")
+        location: City name in English or Korean (e.g., "Seoul", "서울", "Tokyo", "San Francisco")
     
     Returns:
-        Dict containing temperature, condition, humidity, and timestamp
+        Dict containing:
+        - location: Location name
+        - temperature: Current temperature in Celsius
+        - feels_like: Feels-like temperature in Celsius
+        - condition: Weather condition description
+        - humidity: Humidity percentage
+        - wind_speed: Wind speed in km/h
+        - observation_time: When the data was observed
+        - data_source: API source used
+    
+    Example:
+        >>> await get_weather("Seoul")
+        {
+            "location": "Seoul, South Korea",
+            "temperature": "8°C",
+            "feels_like": "5°C",
+            "condition": "Partly cloudy",
+            "humidity": "62%",
+            "wind_speed": "15 km/h",
+            "observation_time": "2025-10-06 14:30",
+            "data_source": "wttr.in"
+        }
     """
-    # Mock weather data (In production, use real weather API)
-    temp = random.randint(15, 30)
-    conditions = ["Sunny", "Cloudy", "Rainy", "Partly Cloudy"]
-    condition = random.choice(conditions)
-    humidity = random.randint(40, 80)
-    
-    weather_data = {
-        "location": location,
-        "temperature": f"{temp}°C",
-        "condition": condition,
-        "humidity": f"{humidity}%"
-    }
-    
-    return weather_data
-
-
-@mcp.tool()
-async def calculate(expression: str) -> Dict[str, Any]:
-    """
-    Perform mathematical calculations.
-    
-    Args:
-        expression: Mathematical expression (e.g., "2 + 2", "(10 * 5) / 2")
-                   Supports: +, -, *, /, parentheses
-    
-    Returns:
-        Dict containing the expression and calculated result, or error message
-    """
-    # Validate expression contains only allowed characters
-    allowed_chars = set("0123456789+-*/() .")
-    if not all(c in allowed_chars for c in expression):
-        return {"error": "Invalid characters in expression"}
-    
     try:
-        # Use eval with restricted namespace for safety
-        # Alternative: use ast.literal_eval or a proper math parser
-        result = eval(expression, {"__builtins__": {}}, {})
+        # Use wttr.in API - free, reliable, no API key required
+        # Format: https://wttr.in/{location}?format=j1
+        url = f"https://wttr.in/{location}?format=j1"
+        
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.get(url)
+            response.raise_for_status()
+            data = response.json()
+        
+        # Extract current conditions
+        current = data.get("current_condition", [{}])[0]
+        nearest_area = data.get("nearest_area", [{}])[0]
+        
+        # Parse location name
+        area_name = nearest_area.get("areaName", [{}])[0].get("value", location)
+        country = nearest_area.get("country", [{}])[0].get("value", "")
+        location_display = f"{area_name}, {country}" if country else area_name
+        
+        # Parse weather data
+        temp_c = current.get("temp_C", "N/A")
+        feels_like_c = current.get("FeelsLikeC", "N/A")
+        condition_desc = current.get("weatherDesc", [{}])[0].get("value", "Unknown")
+        humidity = current.get("humidity", "N/A")
+        wind_speed = current.get("windspeedKmph", "N/A")
+        wind_dir = current.get("winddir16Point", "")
+        observation_time = current.get("observation_time", "N/A")
+        
+        weather_data = {
+            "location": location_display,
+            "temperature": f"{temp_c}°C",
+            "feels_like": f"{feels_like_c}°C",
+            "condition": condition_desc,
+            "humidity": f"{humidity}%",
+            "wind_speed": f"{wind_speed} km/h" + (f" {wind_dir}" if wind_dir else ""),
+            "observation_time": observation_time,
+            "data_source": "wttr.in (real-time weather data)"
+        }
+        
+        return weather_data
+        
+    except httpx.HTTPError as e:
         return {
-            "expression": expression,
-            "result": float(result)  # Ensure consistent number type
+            "error": f"Failed to fetch weather data for '{location}'",
+            "details": f"HTTP error: {str(e)}",
+            "suggestion": "Please check the city name spelling or try a major city name in English."
         }
     except Exception as e:
-        return {"error": f"Calculation error: {str(e)}"}
+        return {
+            "error": f"Unexpected error getting weather for '{location}'",
+            "details": str(e),
+            "suggestion": "Please try again with a different city name."
+        }
 
 
-@mcp.tool()
-async def get_current_time() -> Dict[str, Any]:
-    """
-    Get current date and time in ISO format.
-    
-    Returns:
-        Dict containing current_time (ISO format) and timezone
-    """
-    import time
-    
-    now = datetime.now()
-    current_time = now.isoformat()
-    timezone = time.tzname[0]
-    
-    result = {
-        "current_time": current_time,
-        "timezone": timezone,
-        "timestamp": int(now.timestamp())
-    }
-    
-    return result
-
-
-@mcp.tool()
-async def generate_random_number(min: int, max: int) -> Dict[str, Any]:
-    """
-    Generate a random integer between min and max (inclusive).
-    
-    Args:
-        min: Minimum value (inclusive)
-        max: Maximum value (inclusive)
-    
-    Returns:
-        Dict containing the random_number, min, and max values
-    """
-    if min > max:
-        return {"error": "min must be less than or equal to max"}
-    
-    random_num = random.randint(min, max)
-    return {
-        "random_number": random_num,
-        "min": min,
-        "max": max
-    }
+# =============================================================================
+# Additional utility tools can be added here
+# =============================================================================
+# Keep the server focused on providing high-quality weather information.
+# If you need more tools, consider creating separate specialized MCP servers.
 
 
 if __name__ == "__main__":
@@ -154,19 +160,22 @@ if __name__ == "__main__":
     mcp.settings.streamable_http_path = MOUNT_PATH
     
     # Print startup info
-    print("="*60)
-    print("🚀 Starting Azure Foundry MCP Server (Streamable HTTP)")
-    print("="*60)
+    print("="*70)
+    print("🌤️  Starting Azure Foundry Weather MCP Server (Streamable HTTP)")
+    print("="*70)
     print(f"Server URL: http://{HOST}:{PORT}")
     print(f"MCP Endpoint: http://{HOST}:{PORT}{MOUNT_PATH}")
     print(f"\nMCP Protocol Endpoints:")
     print(f"  • POST {MOUNT_PATH} - MCP message handling (SSE)")
-    print(f"\nTools available:")
-    print(f"  • get_weather(location) - Get weather information")
-    print(f"  • calculate(expression) - Perform calculations")
-    print(f"  • get_current_time() - Get current time")
-    print(f"  • generate_random_number(min, max) - Generate random number")
-    print("="*60 + "\n")
+    print(f"\nWeather Service:")
+    print(f"  • Data Provider: wttr.in (real-time weather API)")
+    print(f"  • Coverage: Worldwide cities")
+    print(f"  • Languages: Korean, English, and more")
+    print(f"\nAvailable Tool:")
+    print(f"  • get_weather(location) - Get accurate real-time weather information")
+    print(f"    - Example: get_weather('Seoul') or get_weather('서울')")
+    print(f"    - Returns: temperature, feels-like, condition, humidity, wind")
+    print("="*70 + "\n")
     
     # Run FastMCP server with streamable-http transport
     # This automatically creates a FastAPI app with the MCP endpoints

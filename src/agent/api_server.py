@@ -16,6 +16,7 @@ from azure.identity import DefaultAzureCredential, ManagedIdentityCredential, Ch
 from main_agent import MainAgent
 from tool_agent import ToolAgent
 from research_agent import ResearchAgent
+from masking import mask_text, get_mode
 
 # Load environment variables
 import pathlib
@@ -82,7 +83,64 @@ async def startup_event():
         parts = conn_str.split(';')
         project_endpoint = parts[0]
         
-        # Initialize Azure AI Project Client with ChainedTokenCredential
+        # ========================================================================
+        # ⚡ CRITICAL: Tracing configuration for Azure AI Foundry
+        # ========================================================================
+        # Azure AI Foundry Tracing requires:
+        # 1. Application Insights instrumentation (configure_azure_monitor)
+        # 2. Content recording enabled in AIProjectClient
+        # ========================================================================
+        
+        # Get Application Insights connection string early
+        app_insights_conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+        content_recording_flag = os.getenv("AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED", "false").lower() in ["1", "true", "yes"]
+        
+        # Configure OpenTelemetry BEFORE creating AIProjectClient
+        if app_insights_conn_str:
+            from azure.monitor.opentelemetry import configure_azure_monitor
+            
+            # ========================================================================
+            # 🔥 CRITICAL: Configure OpenTelemetry with FULL instrumentation
+            # ========================================================================
+            # This MUST be called before any Azure SDK operations
+            # resource_attributes help identify traces in Application Insights
+            # ========================================================================
+            configure_azure_monitor(
+                connection_string=app_insights_conn_str,
+                enable_live_metrics=True,
+                logger_name="azure",
+                instrumentation_options={
+                    "azure_sdk": {"enabled": True},
+                    "django": {"enabled": False},
+                    "fastapi": {"enabled": True},
+                    "flask": {"enabled": False},
+                    "psycopg2": {"enabled": False},
+                    "requests": {"enabled": True},
+                    "urllib": {"enabled": True},
+                    "urllib3": {"enabled": True},
+                }
+            )
+            logger.info("✅ Azure Monitor OpenTelemetry configured with full instrumentation")
+            # Log content recording status (helps operators verify prompt/completion capture)
+            if content_recording_flag:
+                logger.info("✅ GenAI content recording ENABLED (prompts & completions will be sent to telemetry)")
+            else:
+                logger.warning("⚠️  GenAI content recording DISABLED (set AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true to capture Input/Output)")
+            logger.info(f"🔐 Masking mode: {get_mode()} (env AGENT_MASKING_MODE)")
+
+            # ================================================================
+            # 📡 AIAgentsInstrumentor (standard agent/tool span auto-instrumentation)
+            # ================================================================
+            try:
+                from azure.ai.agents.telemetry import AIAgentsInstrumentor  # type: ignore
+                AIAgentsInstrumentor().instrument()
+                logger.info("✅ AIAgentsInstrumentor enabled (standard agent/tool spans will be emitted)")
+            except ImportError:
+                logger.warning("⚠️  AIAgentsInstrumentor not available (upgrade azure-ai-projects if needed)")
+            except Exception as ag_err:
+                logger.warning(f"⚠️  Failed to enable AIAgentsInstrumentor: {ag_err}")
+        
+        # Initialize Azure AI Project Client with tracing enabled
         credential = ChainedTokenCredential(
             ManagedIdentityCredential(),
             DefaultAzureCredential()
@@ -90,64 +148,47 @@ async def startup_event():
         
         project_client = AIProjectClient(
             credential=credential,
-            endpoint=project_endpoint
+            endpoint=project_endpoint,
+            # Enable content recording for Tracing UI Input/Output
+            user_agent="agentic-ai-labs/1.0",
+            logging_enable=True
         )
         logger.info("✅ Azure AI Project Client initialized")
+
+        # Defensive: if env var true but user accidentally removed semantic attributes later, give hint
+        if content_recording_flag:
+            logger.info("ℹ️  Expecting span attributes gen_ai.prompt / gen_ai.completion to appear in traces.")
         
         # ========================================================================
-        # 🔍 Application Analytics Configuration (OpenTelemetry)
+        # 🔍 Azure AI Inference Tracing Configuration
         # ========================================================================
-        # This section configures Azure Monitor OpenTelemetry to send telemetry
-        # data to Application Insights, which powers Application Analytics in
-        # Azure AI Foundry Portal.
-        #
-        # WHY THIS IS REQUIRED:
-        # 1. Local notebook execution does NOT have this configuration
-        # 2. Only containerized agents (deployed to ACA) send telemetry
-        # 3. Azure AI Foundry's Application Analytics ONLY tracks container metrics
-        #
-        # REQUIRED CONDITIONS for metrics to appear:
-        # ✅ Agent must be deployed to Azure Container Apps
-        # ✅ APPLICATIONINSIGHTS_CONNECTION_STRING must be set (environment variable)
-        # ✅ configure_azure_monitor() must be called (below)
-        # ✅ Managed Identity must be authenticated to Azure AI Foundry
-        #
-        # WHAT GETS TRACKED:
-        # - Total inference calls (Agent API requests)
-        # - Average duration (Response time)
-        # - Error rate (Failed requests)
-        # - Token usage (LLM consumption)
-        # - Agent traces (Agent lifecycle events)
-        #
-        # Reference: See README.md > "문제 해결" > "Application Analytics 메트릭이 보이지 않는 경우"
+        # Enable detailed tracing for Azure AI Inference calls
         # ========================================================================
-        try:
-            # Get Application Insights connection string from environment or project
-            app_insights_conn_str = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+        if app_insights_conn_str:
+            try:
+                from azure.ai.inference.tracing import AIInferenceInstrumentor  # type: ignore
+                AIInferenceInstrumentor().instrument()
+                logger.info("✅ Azure AI Inference Tracing enabled")
+            except ImportError:
+                logger.warning("⚠️  azure-ai-inference not installed, skipping AIInferenceInstrumentor")
+            except Exception as trace_error:
+                logger.warning(f"⚠️  Failed to enable AI Inference Tracing: {trace_error}")
             
-            # If not in env, try to get from project connections
-            if not app_insights_conn_str:
+            # Also instrument HTTP requests
+            try:
+                from opentelemetry.instrumentation.requests import RequestsInstrumentor
+                RequestsInstrumentor().instrument()
                 try:
-                    # Get Application Insights connection from project
-                    from azure.ai.projects.models import ConnectionType
-                    connections = project_client.connections.list(connection_type=ConnectionType.AZURE_AI_SERVICES)
-                    for conn in connections:
-                        if hasattr(conn, 'properties') and hasattr(conn.properties, 'application_insights_connection_string'):
-                            app_insights_conn_str = conn.properties.application_insights_connection_string
-                            break
-                except Exception as conn_error:
-                    logger.warning(f"Could not get App Insights from connections: {conn_error}")
-            
-            if app_insights_conn_str:
-                from azure.monitor.opentelemetry import configure_azure_monitor
-                configure_azure_monitor(connection_string=app_insights_conn_str)
-                logger.info("✅ Azure Monitor OpenTelemetry configured for Application Analytics")
-            else:
-                logger.warning("⚠️  Application Insights connection string not found")
-                logger.warning("   Set APPLICATIONINSIGHTS_CONNECTION_STRING environment variable")
-        except Exception as e:
-            logger.error(f"❌ Failed to configure OpenTelemetry: {e}")
-            logger.error("   Application Analytics will not show metrics")
+                    from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor  # type: ignore
+                    HTTPXClientInstrumentor().instrument()
+                except Exception:
+                    logger.warning("⚠️  httpx instrumentation not available (optional)")
+                logger.info("✅ HTTP instrumentation enabled (requests + optional httpx)")
+            except Exception as http_error:
+                logger.warning(f"⚠️  Failed to enable HTTP instrumentation: {http_error}")
+        else:
+            logger.warning("⚠️  Application Insights connection string not found")
+            logger.warning("   Tracing and Application Analytics will not work")
         
         # Create sub-agents
         mcp_endpoint = os.getenv("MCP_ENDPOINT")
@@ -226,15 +267,36 @@ async def chat_with_main_agent(request: AgentRequest):
         raise HTTPException(status_code=503, detail="Main agent not initialized")
     
     try:
-        logger.info(f"💬 Main Agent request: {request.message[:100]}...")
+        # ========================================================================
+        # 🔍 OpenTelemetry Span for Tracing Input/Output
+        # ========================================================================
+        # Create a custom span to capture input/output in Azure AI Foundry Tracing
+        # This makes the input/output columns visible in the Tracing UI
+        # ========================================================================
+        from opentelemetry import trace
+        tracer = trace.get_tracer(__name__)
         
-        response_text = await main_agent.run(
-            message=request.message,
-            thread_id=request.thread_id
-        )
-        
-        # thread_id는 현재 구현에서 반환하지 않으므로 임시로 "main-thread" 사용
-        return AgentResponse(response=response_text, thread_id="main-thread")
+        with tracer.start_as_current_span("agent_chat") as span:
+            # Log input to span attributes (visible in Tracing)
+            # Using Gen AI semantic conventions for Azure AI Foundry compatibility
+            span.set_attribute("gen_ai.prompt", mask_text(request.message))
+            span.set_attribute("gen_ai.system", "azure_ai_agent")
+            span.set_attribute("gen_ai.request.model", "gpt-4o")
+            
+            logger.info(f"💬 Main Agent request: {request.message[:100]}...")
+            
+            response_text = await main_agent.run(
+                message=request.message,
+                thread_id=request.thread_id
+            )
+            
+            # Log output to span attributes (visible in Tracing)
+            # Using Gen AI semantic conventions for Azure AI Foundry compatibility
+            span.set_attribute("gen_ai.completion", mask_text(response_text))
+            span.set_attribute("gen_ai.response.finish_reason", "stop")
+            
+            # thread_id는 현재 구현에서 반환하지 않으므로 임시로 "main-thread" 사용
+            return AgentResponse(response=response_text, thread_id="main-thread")
         
     except Exception as e:
         logger.error(f"❌ Error: {e}")
