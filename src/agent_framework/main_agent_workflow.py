@@ -121,10 +121,15 @@ def _initialize_agents():
     # Research Agent - Create for RAG operations  
     if os.getenv("SEARCH_ENDPOINT") and os.getenv("SEARCH_INDEX"):
         logger.info("Creating Research Agent...")
+        search_key = os.getenv("SEARCH_KEY")
+        if not search_key:
+            logger.warning("⚠️  SEARCH_KEY not set - Research Agent will have limited functionality")
+        
         research_agent_instance = ResearchAgent(
             project_endpoint=os.getenv("AZURE_AI_PROJECT_ENDPOINT"),
             search_endpoint=os.getenv("SEARCH_ENDPOINT"),
-            search_index=os.getenv("SEARCH_INDEX")
+            search_index=os.getenv("SEARCH_INDEX"),
+            search_key=search_key
         )
     else:
         logger.warning("SEARCH_ENDPOINT/SEARCH_INDEX not set - Research Agent disabled")
