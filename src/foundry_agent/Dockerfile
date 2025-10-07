@@ -7,10 +7,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy all agent files
-COPY main_agent.py .
-COPY tool_agent.py .
-COPY research_agent.py .
-COPY api_server.py .
+COPY *.py .
 
 # Copy environment variables file
 COPY .env .
