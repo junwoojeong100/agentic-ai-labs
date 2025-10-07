@@ -341,7 +341,7 @@ agentic-ai-labs/
 │       └── security/                       # Key Vault, RBAC
 │
 ├── src/                                    # 소스 코드
-│   ├── agent/                              # Multi-Agent 구현
+│   ├── foundy_agent/                       # Multi-Agent 구현
 │   │   ├── main_agent.py                   # Main Agent (오케스트레이터)
 │   │   ├── tool_agent.py                   # Tool Agent (MCP 연동)
 │   │   ├── research_agent.py               # Research Agent (RAG)
@@ -456,7 +456,11 @@ AGENT_MASKING_MODE=standard  # standard|strict|off (코드에서 선택적으로
 | 선택 | OTEL_TRACES_SAMPLER / ARG | 트레이스 비율 조절 |
 | 선택 | AGENT_MASKING_MODE | 프롬프트/응답 마스킹 전략 선택 |
 
-> `AGENT_MASKING_MODE` 는 제공되는 샘플 마스킹 유틸(`src/agent/masking.py`)과 연동하여 prompt/completion 기록 전 민감정보 기본 정규식 마스킹을 적용할 때 사용할 수 있습니다. (없으면 무시)
+> - `AGENT_MASKING_MODE` → off / standard / strict (기본: off)
+
+> `AGENT_MASKING_MODE` 는 제공되는 샘플 마스킹 유틸(`src/foundry_agent/masking.py`)과 연동하여 prompt/completion 기록 전 민감정보 기본 정규식 마스킹을 적용할 때 사용할 수 있습니다. (없으면 무시)
+
+---
 
 #### Content Recording 운영 가이드
 | 환경 | 권장 값 | 비고 |
@@ -639,7 +643,7 @@ az search indexer show-status \
 # 가상 환경 재생성
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r src/agent/requirements.txt
+pip install -r src/foundry_agent/requirements.txt
 pip install -r src/mcp/requirements.txt
 ```
 

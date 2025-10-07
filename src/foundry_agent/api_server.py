@@ -66,6 +66,40 @@ class AgentResponse(BaseModel):
     response: str
     thread_id: str
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup agents on shutdown"""
+    global main_agent, tool_agent, research_agent
+    
+    logger.info("🛑 Shutting down agents...")
+    
+    # Delete Main Agent
+    if main_agent:
+        try:
+            main_agent.delete()
+            logger.info("✅ Main Agent deleted")
+        except Exception as e:
+            logger.error(f"❌ Error deleting Main Agent: {e}")
+    
+    # Delete Tool Agent
+    if tool_agent:
+        try:
+            await tool_agent.delete()
+            logger.info("✅ Tool Agent deleted")
+        except Exception as e:
+            logger.error(f"❌ Error deleting Tool Agent: {e}")
+    
+    # Delete Research Agent
+    if research_agent:
+        try:
+            research_agent.delete()
+            logger.info("✅ Research Agent deleted")
+        except Exception as e:
+            logger.error(f"❌ Error deleting Research Agent: {e}")
+    
+    logger.info("✅ All agents cleaned up")
+
+
 @app.on_event("startup")
 async def startup_event():
     """Initialize agents on startup"""
