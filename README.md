@@ -116,8 +116,6 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 - **Azure Container Apps 배포**: 확장 가능한 서버리스 호스팅
 - **HTTP/SSE 엔드포인트**: `/mcp` 경로로 MCP 프로토콜 제공
 
-> **개선 사항**: 이전의 랜덤 Mock 데이터 대신 실제 날씨 API를 사용하여 정확한 정보를 제공합니다. 1개의 기능에 집중하여 더 높은 품질과 신뢰성을 보장합니다.
-
 ### RAG (Retrieval-Augmented Generation)
 - **Azure AI Search 통합**: 벡터 + 키워드 하이브리드 검색
 - **Embedding 모델**: Azure OpenAI text-embedding-3-large (3072차원)
@@ -178,6 +176,14 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 > - Database Connection Strings
 > - Container Apps에서 Key Vault Reference를 통한 시크릿 주입
 > - Managed Identity 기반 접근 제어
+
+> **Storage Account 사용 안내**  
+> Azure Storage Account도 인프라 배포 시 생성되지만, 이번 실습에서는 직접 사용하지 않습니다. 현재 실습에서는 JSON 파일 기반으로 AI Search 인덱스를 생성하므로 Blob Storage가 필요하지 않습니다. 향후 확장 시나리오에서는 Storage Account를 다음과 같이 활용할 수 있습니다:
+> - AI Search의 데이터 소스로 Blob Storage 연결 (문서, PDF 등)
+> - Agent 실행 로그 및 대화 기록 저장
+> - 대용량 파일 업로드/다운로드 처리
+> - Queue Storage를 통한 비동기 작업 처리
+> - Table Storage를 활용한 메타데이터 관리
 
 ## ✅ 사전 요구사항
 
@@ -326,6 +332,21 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
 - **10개의 다양한 테스트 케이스**: Tool Agent(5), Research Agent(3), 복합 질의(2)
 - 실제 질의를 통한 Multi-Agent 오케스트레이션 검증
 
+#### 📓 Lab 4: [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb) ⚠️ **작업 중**
+**섹션 구조:**
+1. 환경 설정 및 인증 (Setup & Authentication)
+2. Agent Framework Workflow 배포 (Deploy Workflow Pattern)
+3. Workflow 테스트 (Test Workflow Executors)
+
+**주요 내용:**
+- Microsoft Agent Framework의 Workflow Pattern 구현
+- Router Executor 기반 AI 의도 분류
+- Tool, Research, General, Orchestrator Executor 구성
+- Workflow Context를 통한 메시지 라우팅
+- Connected Agent vs Workflow Pattern 비교
+
+> ⚠️ **참고**: 이 노트북은 현재 작업 중이며, 일부 기능이 완성되지 않았을 수 있습니다.
+
 
 ## 📁 프로젝트 구조
 
@@ -341,11 +362,19 @@ agentic-ai-labs/
 │       └── security/                       # Key Vault, RBAC
 │
 ├── src/                                    # 소스 코드
-│   ├── foundy_agent/                       # Multi-Agent 구현
+│   ├── foundy_agent/                       # Multi-Agent 구현 (Foundry Agent Service)
 │   │   ├── main_agent.py                   # Main Agent (오케스트레이터)
 │   │   ├── tool_agent.py                   # Tool Agent (MCP 연동)
 │   │   ├── research_agent.py               # Research Agent (RAG)
 │   │   ├── api_server.py                   # Agent API 서버
+│   │   ├── requirements.txt
+│   │   └── Dockerfile
+│   ├── agent_framework/                    # ⚠️ 작업 중 - Agent Framework Workflow
+│   │   ├── main_agent_workflow.py          # Workflow Router & Orchestrator
+│   │   ├── tool_agent.py                   # Tool Executor
+│   │   ├── research_agent.py               # Research Executor
+│   │   ├── api_server.py                   # Workflow API 서버
+│   │   ├── test_workflow.py                # Workflow 테스트
 │   │   ├── requirements.txt
 │   │   └── Dockerfile
 │   └── mcp/                                # MCP 서버
@@ -362,6 +391,7 @@ agentic-ai-labs/
 ├── 01_deploy_azure_resources.ipynb        # Lab 1 노트북
 ├── 02_setup_ai_search_rag.ipynb           # Lab 2 노트북
 ├── 03_deploy_foundry_agent.ipynb          # Lab 3 노트북
+├── 04_deploy_agent_framework.ipynb        # Lab 4 노트북 ⚠️ 작업 중
 ├── azure.yaml                              # azd 설정
 ├── config.json                             # 배포 설정 (자동 생성)
 └── README.md                               # 이 파일
@@ -514,34 +544,21 @@ az acr repository delete --name <acrName> --image mcp-server:latest --yes
 
 ---
 
-#### 검증 Kusto (Content Recording & 샘플링 확인)
-```kusto
-dependencies
-| where timestamp > ago(30m)
-| where name contains "ChatCompletions" or customDimensions has "gen_ai.prompt"
-| summarize count() by bin(timestamp, 5m)
-```
-> 상세 OpenTelemetry / Tracing 구성 흐름은 `OBSERVABILITY.md` 문서를 참고하세요.
-
 ### Azure Developer CLI (azd) 설정
 
 `azure.yaml` 파일은 azd 배포를 위한 메타데이터를 정의합니다:
 
 ```yaml
 name: ai-foundry-agent-lab
-services:
-  mcp-server:
-    project: ./src/mcp
-    language: python
-    host: containerapp
 infra:
   path: ./infra
   module: main
 ```
 
 **azd 사용 범위:**
-- **Lab 1**: `azd up` 명령으로 Azure 인프라 배포 (Bicep 템플릿 기반)
+- **Lab 1**: `azd provision` 명령으로 Azure 인프라 배포 (Bicep 템플릿 기반)
   - Azure AI Foundry Project, OpenAI, AI Search, Container Apps Environment 등 생성
+  - Container Apps는 생성하지 않고 인프라만 프로비저닝 (약 3-5분 소요)
 - **Lab 3**: Container 배포는 `az containerapp create` 명령으로 수동 진행
   - MCP Server 및 Agent Service 배포
   - 더 세밀한 제어와 학습 목적으로 수동 배포 방식 사용
@@ -549,7 +566,7 @@ infra:
 **참고:** 
 - azd는 인프라 프로비저닝(Lab 1)에 주로 사용됩니다
 - 애플리케이션 배포(Lab 3)는 학습 목적상 단계별로 수동 실행합니다
-- 향후 azd 기반 전체 자동 배포로 개선 예정입니다
+- `azd up` 대신 `azd provision`을 사용하여 인프라만 빠르게 구성합니다
 
 ## 📚 Knowledge Base 관리
 

@@ -96,6 +96,15 @@ OTEL_TRACES_SAMPLER_ARG=0.2  # 20%
 
 ## 8. Kusto Quick Queries
 
+**Content Recording & 샘플링 확인:**
+
+```kusto
+dependencies
+| where timestamp > ago(30m)
+| where name contains "ChatCompletions" or customDimensions has "gen_ai.prompt"
+| summarize count() by bin(timestamp, 5m)
+```
+
 **최근 Prompt/Completion 10건 조회:**
 
 ```kusto

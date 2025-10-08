@@ -1,6 +1,6 @@
 # Microsoft Agent Framework - Core packages
-agent-framework>=1.0.0b251001
-agent-framework[azure-ai]>=1.0.0b251001
+agent-framework>=1.0.0b251007
+agent-framework[azure-ai]>=1.0.0b251007
 
 # Azure Identity for authentication
 azure-identity>=1.17.0
