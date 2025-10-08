@@ -14,6 +14,12 @@ from agent_framework import ChatAgent
 from agent_framework.azure import AzureAIAgentClient
 from azure.identity.aio import AzureCliCredential, ManagedIdentityCredential, ChainedTokenCredential
 
+# OpenTelemetry imports for tracing
+from opentelemetry import trace
+
+# Import masking utility
+from masking import mask_content
+
 logger = logging.getLogger(__name__)
 
 
@@ -316,53 +322,86 @@ Always respond in Korean when user writes in Korean."""
         if not self.agent:
             raise RuntimeError("Agent not initialized")
         
-        try:
-            logger.info(f"Running {self.name} with message: {message[:100]}...")
+        # ========================================================================
+        # 🔍 OpenTelemetry Span for Tool Agent Execution Tracing
+        # ========================================================================
+        tracer = trace.get_tracer(__name__)
+        
+        with tracer.start_as_current_span("tool_agent.execute") as span:
+            span.set_attribute("agent.type", "tool")
+            span.set_attribute("agent.message", mask_content(message))
+            span.set_attribute("tool.mcp_endpoint", self.mcp_endpoint or "not_configured")
             
-            # Get LLM response
-            result = await self.agent.run(message, thread=thread)
-            response_text = result.text if hasattr(result, 'text') else str(result)
-            
-            logger.info(f"[llm] Response: {response_text[:200]}...")
-            
-            # Check if LLM wants to call a tool
-            if self.mcp_client:
-                tool_call = self._parse_tool_call(response_text)
+            try:
+                logger.info(f"Running {self.name} with message: {message[:100]}...")
                 
-                if tool_call:
-                    tool_name = tool_call['tool']
-                    arguments = tool_call['arguments']
+                # Get LLM response with tracing
+                with tracer.start_as_current_span("tool_agent.llm_call") as llm_span:
+                    llm_span.set_attribute("gen_ai.system", "azure_ai_agent_framework")
+                    llm_span.set_attribute("gen_ai.request.model", self.model_deployment_name)
+                    llm_span.set_attribute("gen_ai.prompt", mask_content(message))
                     
-                    logger.info(f"[tool] Calling: {tool_name}")
+                    result = await self.agent.run(message, thread=thread)
+                    response_text = result.text if hasattr(result, 'text') else str(result)
                     
-                    # Call the MCP tool
-                    tool_result = await self.mcp_client.call_tool(tool_name, arguments)
+                    llm_span.set_attribute("gen_ai.completion", mask_content(response_text))
+                    llm_span.set_attribute("gen_ai.response.length", len(response_text))
+                
+                logger.info(f"[llm] Response: {response_text[:200]}...")
+                
+                # Check if LLM wants to call a tool
+                if self.mcp_client:
+                    tool_call = self._parse_tool_call(response_text)
                     
-                    # Format result in Korean
-                    if isinstance(tool_result, dict):
-                        result_str = json.dumps(tool_result, ensure_ascii=False, indent=2)
-                    else:
-                        result_str = str(tool_result)
-                    
-                    if tool_name == "calculate":
-                        final_response = f"계산 결과: {result_str}"
-                    elif tool_name == "get_weather":
-                        final_response = f"날씨 정보: {result_str}"
-                    elif tool_name == "get_current_time":
-                        final_response = f"현재 시간: {result_str}"
-                    elif tool_name == "generate_random_number":
-                        final_response = f"생성된 랜덤 숫자: {result_str}"
-                    else:
-                        final_response = result_str
-                    
-                    logger.info(f"[result] {final_response}")
-                    return final_response
-            
-            return response_text
-            
-        except Exception as e:
-            logger.error(f"Error running tool agent: {e}", exc_info=True)
-            raise
+                    if tool_call:
+                        tool_name = tool_call['tool']
+                        arguments = tool_call['arguments']
+                        
+                        logger.info(f"[tool] Calling: {tool_name}")
+                        
+                        # Call the MCP tool with tracing
+                        with tracer.start_as_current_span("tool_agent.mcp_call") as mcp_span:
+                            mcp_span.set_attribute("mcp.tool_name", tool_name)
+                            mcp_span.set_attribute("mcp.arguments", json.dumps(arguments))
+                            
+                            tool_result = await self.mcp_client.call_tool(tool_name, arguments)
+                            
+                            mcp_span.set_attribute("mcp.result", str(tool_result)[:500])
+                        
+                        # Format result in Korean
+                        if isinstance(tool_result, dict):
+                            result_str = json.dumps(tool_result, ensure_ascii=False, indent=2)
+                        else:
+                            result_str = str(tool_result)
+                        
+                        if tool_name == "calculate":
+                            final_response = f"계산 결과: {result_str}"
+                        elif tool_name == "get_weather":
+                            final_response = f"날씨 정보: {result_str}"
+                        elif tool_name == "get_current_time":
+                            final_response = f"현재 시간: {result_str}"
+                        elif tool_name == "generate_random_number":
+                            final_response = f"생성된 랜덤 숫자: {result_str}"
+                        else:
+                            final_response = result_str
+                        
+                        span.set_attribute("tool.final_response_length", len(final_response))
+                        span.set_attribute("tool.status", "success_with_tool_call")
+                        
+                        logger.info(f"[result] {final_response}")
+                        return final_response
+                
+                span.set_attribute("tool.status", "success_no_tool_call")
+                span.set_attribute("tool.response_length", len(response_text))
+                
+                return response_text
+                
+            except Exception as e:
+                logger.error(f"Error running tool agent: {e}", exc_info=True)
+                span.set_attribute("tool.status", "error")
+                span.set_attribute("error.message", str(e))
+                span.record_exception(e)
+                raise
     
     def _parse_tool_call(self, response: str) -> Optional[Dict[str, Any]]:
         """Parse tool call from LLM response."""

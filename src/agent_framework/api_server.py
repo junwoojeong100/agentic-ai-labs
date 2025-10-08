@@ -12,7 +12,14 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+# OpenTelemetry imports for tracing
+from opentelemetry import trace
+from azure.monitor.opentelemetry import configure_azure_monitor
+from azure.ai.inference.tracing import AIInferenceInstrumentor
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
 from main_agent_workflow import MainAgentWorkflow
+from masking import mask_content
 
 # Load environment variables
 load_dotenv()
@@ -82,6 +89,25 @@ async def startup_event():
     try:
         logger.info("🚀 Initializing Agent Framework Service...")
         
+        # ========================================================================
+        # 🔍 Step 1: Configure Observability BEFORE creating agents
+        # ========================================================================
+        app_insights_conn = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
+        if app_insights_conn:
+            logger.info("📊 Configuring Azure Monitor for observability...")
+            configure_azure_monitor()
+            logger.info("✅ Azure Monitor configured")
+            
+            # Instrument AI Inference for LLM call tracing
+            AIInferenceInstrumentor().instrument()
+            logger.info("✅ AI Inference instrumentation enabled")
+            
+            # Instrument FastAPI for HTTP request tracing
+            FastAPIInstrumentor.instrument_app(app)
+            logger.info("✅ FastAPI instrumentation enabled")
+        else:
+            logger.warning("⚠️  APPLICATIONINSIGHTS_CONNECTION_STRING not set - Observability disabled")
+        
         # Get configuration
         project_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT")
         if not project_endpoint:
@@ -96,7 +122,7 @@ async def startup_event():
         main_agent = MainAgentWorkflow()
         
         logger.info("✅ Main Agent Workflow initialized")
-        logger.info(f"   Tool Agent (MCP): {'Enabled' if mcp_endpoint else 'Disabled (MCP_ENDPOINT not set)'}")
+        logger.info(f"   Tool Agent (MCP): {'Enabled' if mcp_endpoint else 'Enabled' if mcp_endpoint else 'Disabled (MCP_ENDPOINT not set)'}")
         logger.info(f"   Research Agent (RAG): {'Enabled' if search_index else 'Disabled (SEARCH_INDEX not set)'}")
         logger.info(f"   Orchestrator: Enabled (for complex queries)")
         logger.info("="*60)
@@ -138,16 +164,34 @@ async def chat_with_main_agent(request: AgentRequest):
     if not main_agent:
         raise HTTPException(status_code=503, detail="Main agent not initialized")
     
-    try:
-        logger.info(f"� Main Agent Workflow request: {request.message[:100]}...")
+    # ========================================================================
+    # 🔍 OpenTelemetry Span for HTTP Request Tracing
+    # ========================================================================
+    tracer = trace.get_tracer(__name__)
+    
+    with tracer.start_as_current_span("api.chat") as span:
+        span.set_attribute("http.method", "POST")
+        span.set_attribute("http.route", "/chat")
+        span.set_attribute("http.request.message", mask_content(request.message))
         
-        response_text = await main_agent.run(request.message)
-        
-        return AgentResponse(response=response_text)
-        
-    except Exception as e:
-        logger.error(f"❌ Error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        try:
+            logger.info(f"📨 Main Agent Workflow request: {request.message[:100]}...")
+            
+            response_text = await main_agent.run(request.message)
+            
+            span.set_attribute("http.status_code", 200)
+            span.set_attribute("http.response.length", len(response_text))
+            span.set_attribute("api.status", "success")
+            
+            return AgentResponse(response=response_text)
+            
+        except Exception as e:
+            logger.error(f"❌ Error: {e}")
+            span.set_attribute("http.status_code", 500)
+            span.set_attribute("api.status", "error")
+            span.set_attribute("error.message", str(e))
+            span.record_exception(e)
+            raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":

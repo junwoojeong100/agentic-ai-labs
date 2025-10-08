@@ -332,20 +332,30 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
 - **10개의 다양한 테스트 케이스**: Tool Agent(5), Research Agent(3), 복합 질의(2)
 - 실제 질의를 통한 Multi-Agent 오케스트레이션 검증
 
-#### 📓 Lab 4: [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb) ⚠️ **작업 중**
+#### 📓 Lab 4: [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb)
 **섹션 구조:**
 1. 환경 설정 및 인증 (Setup & Authentication)
-2. Agent Framework Workflow 배포 (Deploy Workflow Pattern)
-3. Workflow 테스트 (Test Workflow Executors)
+2. Azure AI Search 키 가져오기 (Get Search Key)
+3. Agent Framework Container 빌드 및 배포 (Build & Deploy Container)
+4. Azure 리소스 확인 및 Agent Framework Service 배포 (Deploy with Permissions)
+5. Agent Framework Service 시작 (Start Service)
+6. 배포된 Agent Framework 테스트 (Test Deployed Workflow)
+   - 6.1. Workflow Pattern 테스트 (다양한 질문)
+7. 정리 및 비교 (Summary & Comparison)
 
 **주요 내용:**
 - Microsoft Agent Framework의 Workflow Pattern 구현
-- Router Executor 기반 AI 의도 분류
+- Router Executor 기반 AI 의도 분류 (rule-based / ai-based)
 - Tool, Research, General, Orchestrator Executor 구성
 - Workflow Context를 통한 메시지 라우팅
-- Connected Agent vs Workflow Pattern 비교
-
-> ⚠️ **참고**: 이 노트북은 현재 작업 중이며, 일부 기능이 완성되지 않았을 수 있습니다.
+- **OpenTelemetry 트레이싱 완전 구현**
+  - Azure Monitor + Application Insights 통합
+  - FastAPI 자동 계측 (HTTP 요청 추적)
+  - Azure AI Inference 자동 계측 (LLM 호출 추적)
+  - 커스텀 Span 구현 (Router, Executor, MCP, RAG)
+  - PII 마스킹 유틸리티 (Standard/Strict 모드)
+- Connected Agent vs Workflow Pattern 아키텍처 비교
+- **10개 테스트 케이스**: Tool(4), Research(3), Orchestrator(2), General(1)
 
 
 ## 📁 프로젝트 구조
@@ -362,20 +372,22 @@ agentic-ai-labs/
 │       └── security/                       # Key Vault, RBAC
 │
 ├── src/                                    # 소스 코드
-│   ├── foundy_agent/                       # Multi-Agent 구현 (Foundry Agent Service)
+│   ├── foundry_agent/                      # Multi-Agent 구현 (Foundry Agent Service)
 │   │   ├── main_agent.py                   # Main Agent (오케스트레이터)
 │   │   ├── tool_agent.py                   # Tool Agent (MCP 연동)
 │   │   ├── research_agent.py               # Research Agent (RAG)
 │   │   ├── api_server.py                   # Agent API 서버
+│   │   ├── masking.py                      # PII 마스킹 유틸리티
 │   │   ├── requirements.txt
 │   │   └── Dockerfile
-│   ├── agent_framework/                    # ⚠️ 작업 중 - Agent Framework Workflow
+│   ├── agent_framework/                    # Agent Framework Workflow
 │   │   ├── main_agent_workflow.py          # Workflow Router & Orchestrator
-│   │   ├── tool_agent.py                   # Tool Executor
-│   │   ├── research_agent.py               # Research Executor
+│   │   ├── tool_agent.py                   # Tool Executor (MCP)
+│   │   ├── research_agent.py               # Research Executor (RAG)
 │   │   ├── api_server.py                   # Workflow API 서버
 │   │   ├── test_workflow.py                # Workflow 테스트
-│   │   ├── requirements.txt
+│   │   ├── masking.py                      # PII 마스킹 유틸리티
+│   │   ├── requirements.txt                # OpenTelemetry 패키지 포함
 │   │   └── Dockerfile
 │   └── mcp/                                # MCP 서버
 │       ├── server.py                       # FastMCP 도구 서버
@@ -391,9 +403,10 @@ agentic-ai-labs/
 ├── 01_deploy_azure_resources.ipynb        # Lab 1 노트북
 ├── 02_setup_ai_search_rag.ipynb           # Lab 2 노트북
 ├── 03_deploy_foundry_agent.ipynb          # Lab 3 노트북
-├── 04_deploy_agent_framework.ipynb        # Lab 4 노트북 ⚠️ 작업 중
+├── 04_deploy_agent_framework.ipynb        # Lab 4 노트북
 ├── azure.yaml                              # azd 설정
 ├── config.json                             # 배포 설정 (자동 생성)
+├── OBSERVABILITY.md                        # 관찰성(Tracing/Analytics) 심화 가이드
 └── README.md                               # 이 파일
 ```
 
@@ -511,6 +524,35 @@ AGENT_MASKING_MODE=standard  # standard|strict|off (코드에서 선택적으로
 2. Docker 이미지 재빌드
 3. Container Apps 새 revision 배포
 4. (선택) Kusto Logs로 반영 여부 즉시 확인
+
+---
+
+## 📊 Observability: Monitoring & Tracing
+
+Azure AI Foundry Agent 시스템의 운영 관찰성을 위한 **Monitoring**과 **Tracing** 기능을 제공합니다.
+
+### 핵심 개념
+
+| 기능 | 목적 | 데이터 타입 |
+|------|------|------------|
+| **Monitoring** | 시스템 헬스, SLA, 성능 추세 | 집계 메트릭 (호출 수, 지연, 오류율, 토큰) |
+| **Tracing** | 실행 흐름, 디버깅, 품질 분석 | Span Tree, Prompt/Completion |
+
+### 이 실습에서 구현된 내용
+
+- ✅ **Lab 3 (Foundry Agent)**: Azure Agent Service 자동 계측
+- ✅ **Lab 4 (Agent Framework)**: 커스텀 OpenTelemetry 완전 구현
+
+### 상세 가이드
+
+Monitoring과 Tracing의 차이, 설정 방법, 운영 전략 등 모든 내용은 **[OBSERVABILITY.md](./OBSERVABILITY.md)** 문서를 참조하세요:
+
+- 🎯 Monitoring vs Tracing 상세 비교
+- ⚙️ 단계별 설정 가이드 (환경 변수, 코드 구현)
+- 🔍 Span 구조와 커스텀 계측
+- 📋 Content Recording 운영 전략
+- 🔧 샘플링, PII 마스킹, Troubleshooting
+- 📊 Kusto 쿼리 예제
 
 ---
 ## 🧹 리소스 정리 (Cleanup)

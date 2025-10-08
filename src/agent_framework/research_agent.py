@@ -14,6 +14,12 @@ from azure.identity.aio import AzureCliCredential, ManagedIdentityCredential, Ch
 from azure.search.documents.aio import SearchClient
 from azure.core.credentials import AzureKeyCredential
 
+# OpenTelemetry imports for tracing
+from opentelemetry import trace
+
+# Import masking utility
+from masking import mask_content
+
 logger = logging.getLogger(__name__)
 
 
@@ -234,50 +240,85 @@ Always ground your responses in retrieved information and cite sources when usin
         if not self.agent:
             raise RuntimeError("Agent not initialized")
         
-        try:
-            logger.info(f"Running {self.name} with message: {message[:100]}...")
+        # ========================================================================
+        # 🔍 OpenTelemetry Span for Research Agent Execution Tracing
+        # ========================================================================
+        tracer = trace.get_tracer(__name__)
+        
+        with tracer.start_as_current_span("research_agent.execute") as span:
+            span.set_attribute("agent.type", "research")
+            span.set_attribute("agent.message", mask_content(message))
+            span.set_attribute("research.search_enabled", self.search_client is not None)
+            span.set_attribute("research.index", self.search_index or "not_configured")
             
-            # If search is available, perform RAG
-            if self.search_client:
-                # Search knowledge base
-                search_results = await self._search_knowledge_base(message, top_k=5)
+            try:
+                logger.info(f"Running {self.name} with message: {message[:100]}...")
                 
-                if search_results:
-                    # Format search results
-                    context = self._format_search_results(search_results)
+                # If search is available, perform RAG
+                if self.search_client:
+                    # Search knowledge base with tracing
+                    with tracer.start_as_current_span("research.search") as search_span:
+                        search_span.set_attribute("search.query", mask_content(message))
+                        search_span.set_attribute("search.top_k", 5)
+                        
+                        search_results = await self._search_knowledge_base(message, top_k=5)
+                        
+                        search_span.set_attribute("search.results_count", len(search_results))
+                        search_span.set_attribute("search.status", "success" if search_results else "no_results")
                     
-                    # Create enhanced prompt with search results
-                    enhanced_message = f"""{context}
+                    if search_results:
+                        # Format search results
+                        context = self._format_search_results(search_results)
+                        
+                        # Create enhanced prompt with search results
+                        enhanced_message = f"""{context}
 
 User Question: {message}
 
 Please answer based on the search results above. Cite sources by their [Result N] number."""
-                    
-                    logger.info(f"🔍 Enhanced prompt with {len(search_results)} search results")
-                else:
-                    enhanced_message = f"""No relevant information found in knowledge base.
+                        
+                        logger.info(f"🔍 Enhanced prompt with {len(search_results)} search results")
+                        span.set_attribute("research.mode", "rag")
+                    else:
+                        enhanced_message = f"""No relevant information found in knowledge base.
 
 User Question: {message}
 
 Please answer using your general knowledge and indicate that the information is not from the knowledge base."""
-                    logger.warning("⚠️  No search results found")
-            else:
-                # No search available - use original message
-                enhanced_message = message
-                logger.warning("⚠️  Search not available - using general knowledge")
-            
-            # Run the agent with enhanced message
-            result = await self.agent.run(enhanced_message, thread=thread)
-            
-            # Extract text from result
-            response_text = result.text if hasattr(result, 'text') else str(result)
-            
-            logger.info(f"✅ {self.name} response: {response_text[:100]}...")
-            return response_text
-            
-        except Exception as e:
-            logger.error(f"Error running research agent: {e}")
-            raise
+                        logger.warning("⚠️  No search results found")
+                        span.set_attribute("research.mode", "general_no_results")
+                else:
+                    # No search available - use original message
+                    enhanced_message = message
+                    logger.warning("⚠️  Search not available - using general knowledge")
+                    span.set_attribute("research.mode", "general_no_search")
+                
+                # Run the agent with enhanced message and tracing
+                with tracer.start_as_current_span("research.generate") as gen_span:
+                    gen_span.set_attribute("gen_ai.system", "azure_ai_agent_framework")
+                    gen_span.set_attribute("gen_ai.request.model", self.model_deployment_name)
+                    gen_span.set_attribute("gen_ai.prompt", mask_content(enhanced_message))
+                    
+                    result = await self.agent.run(enhanced_message, thread=thread)
+                    
+                    # Extract text from result
+                    response_text = result.text if hasattr(result, 'text') else str(result)
+                    
+                    gen_span.set_attribute("gen_ai.completion", mask_content(response_text))
+                    gen_span.set_attribute("gen_ai.response.length", len(response_text))
+                
+                span.set_attribute("research.status", "success")
+                span.set_attribute("research.response_length", len(response_text))
+                
+                logger.info(f"✅ {self.name} response: {response_text[:100]}...")
+                return response_text
+                
+            except Exception as e:
+                logger.error(f"Error running research agent: {e}")
+                span.set_attribute("research.status", "error")
+                span.set_attribute("error.message", str(e))
+                span.record_exception(e)
+                raise
     
     def get_new_thread(self):
         """Create a new conversation thread."""
