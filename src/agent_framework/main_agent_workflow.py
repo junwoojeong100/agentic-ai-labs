@@ -107,22 +107,28 @@ def _initialize_agents():
     # Create agent client WITH logging enabled for tracing
     agent_client = create_agent_client()
     
-    # Router Agent - Simple intent classifier
+    # Router Agent - Intelligent intent classifier with detailed agent capabilities
     router_agent = agent_client.create_agent(
         name="RouterAgent",
         instructions=(
-            "You are a simple router. Analyze the query and respond with ONLY ONE WORD.\n\n"
-            "Rules:\n"
-            "- If query needs BOTH (tool operation + knowledge): orchestrator\n"
-            "- If query needs ONLY tool (weather/calc/time/random): tool\n"
-            "- If query needs ONLY knowledge (RAG/MCP/AI concepts): research\n"
-            "- If casual conversation: general\n\n"
-            "Examples:\n"
-            "Q: weather in Tokyo and what is MCP → orchestrator\n"
-            "Q: weather in Seoul → tool\n"
-            "Q: what is RAG → research\n"
-            "Q: hello → general\n\n"
-            "Respond with ONE WORD: orchestrator, tool, research, or general"
+            "Route user queries to the appropriate agent.\n\n"
+            "AGENTS:\n"
+            "• tool - Weather info via MCP (get_weather)\n"
+            "• research - Knowledge search via RAG (Agent/MCP/RAG/Azure AI/Deployment)\n"
+            "• orchestrator - Complex queries needing both tool + research\n"
+            "• general - Casual conversation\n\n"
+            "ROUTING:\n"
+            "1. Weather queries → tool\n"
+            "2. Knowledge questions (what/how/explain) → research\n"
+            "3. Both weather + knowledge → orchestrator\n"
+            "4. Greetings/casual → general\n\n"
+            "EXAMPLES:\n"
+            "Tokyo weather + explain MCP → orchestrator\n"
+            "Seoul weather? → tool\n"
+            "What is RAG? → research\n"
+            "Hello → general\n"
+            "Q: Thanks for your help! → general\n\n"
+            "Respond with ONLY ONE WORD: orchestrator, tool, research, or general"
         ),
     )
     
@@ -188,29 +194,65 @@ async def router_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> No
         try:
             text_lower = msg.text.lower()
             
-            # Simple rule-based detection
-            tool_words = ["weather", "calculate", "time", "random"]
-            research_words = ["what is", "explain", "how", "mcp", "rag", "agent", "protocol"]
+            # Weather-focused keywords (nouns only)
+            tool_keywords = [
+                "weather", "temperature", "temp", "forecast", "climate",
+                "rain", "snow", "sun", "cloud", "wind", "humidity",
+                "storm", "thunder", "fog", "degree", "celsius", "fahrenheit",
+                "날씨", "기온", "온도", "일기예보"
+            ]
             
-            has_tool = any(w in text_lower for w in tool_words)
-            has_research = any(w in text_lower for w in research_words)
-            has_and = " and " in text_lower
             
-            # Rule: If has both + 'and' → orchestrator
-            if has_tool and has_research and has_and:
-                logger.info(f"🎯 Rule-based routing → ORCHESTRATOR")
+            # Knowledge-focused keywords (nouns only)
+            research_keywords = [
+                # Core concepts
+                "mcp", "protocol", "rag", "retrieval", "embedding", "vector",
+                "agent", "orchestration", "handoff", "delegation",
+                
+                # Azure services
+                "azure", "foundry", "search", "index", "openai", "llm",
+                
+                # Technical terms
+                "architecture", "pattern", "deployment", "container", "docker",
+                "thread", "tool", "function", "instruction", "prompt",
+                
+                # Korean terms
+                "에이전트", "멀티", "검색", "배포", "아키텍처", "지식"
+            ]
+            
+            orchestrator_keywords = [" and ", " also ", " plus ", " additionally ", " moreover "]
+            
+            # Check for keywords
+            has_tool = any(kw in text_lower for kw in tool_keywords)
+            has_research = any(kw in text_lower for kw in research_keywords)
+            has_connector = any(kw in text_lower for kw in orchestrator_keywords)
+            
+            # Enhanced rule: If has both intentions with connecting words → orchestrator
+            if has_tool and has_research and has_connector:
+                logger.info(f"🎯 Rule-based routing → ORCHESTRATOR (detected: tool + research + connector)")
                 span.set_attribute("router.method", "rule_based")
                 span.set_attribute("router.intent", "orchestrator")
+                span.set_attribute("router.reason", "multi_intent_with_connector")
                 await ctx.send_message(msg, target_id="orchestrator")
                 return
             
-            # Otherwise, ask AI router
+            # If clearly only tool keywords (no research keywords)
+            if has_tool and not has_research and len(msg.text.split()) < 15:
+                logger.info(f"🎯 Rule-based routing → TOOL (detected: pure tool request)")
+                span.set_attribute("router.method", "rule_based")
+                span.set_attribute("router.intent", "tool")
+                span.set_attribute("router.reason", "pure_tool_request")
+                await ctx.send_message(msg, target_id="tool")
+                return
+            
+            # Otherwise, ask AI router with enhanced context
             span.set_attribute("router.method", "ai_based")
-            result = await router_agent.run(f"Route this: {msg.text}")
+            result = await router_agent.run(f"Route this query: {msg.text}")
             intent = str(result.text if hasattr(result, 'text') else result).strip().lower()
             
             logger.info(f"📊 AI routing → {intent.upper()}")
             span.set_attribute("router.intent", intent)
+            span.set_attribute("router.query_length", len(msg.text))
             
             if "orchestrator" in intent:
                 await ctx.send_message(msg, target_id="orchestrator")
