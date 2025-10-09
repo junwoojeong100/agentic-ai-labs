@@ -77,19 +77,20 @@ Search Configuration:
 
 When answering questions:
 1. First, I will search the knowledge base for relevant information
-2. Then provide you with search results labeled as [Source 1], [Source 2], etc.
-3. You MUST cite these sources in your answer using the format [Source N]
-4. Reference specific sources when making claims or providing information
+2. Then provide you with search results labeled as [Document 1], [Document 2], etc.
+3. You MUST cite these documents in your answer using the format【N:0†source】where N is the document number
+4. Reference specific documents when making claims or providing information
 5. Provide comprehensive, well-structured answers
 6. Include code examples when available
 7. Explain concepts clearly with context
 8. If information is not in search results, state that clearly
 
 CITATION REQUIREMENTS:
-- Always cite sources using [Source N] format when using information from search results
-- Use multiple citations if the information comes from multiple sources
+- Always cite documents using【N:0†source】format (e.g.,【1:0†source】,【2:0†source】)
+- Use this exact format with the special brackets【】
 - Place citations immediately after the relevant sentence or claim
-- Example: "Agents can use RAG for knowledge retrieval [Source 1][Source 2]."
+- Example: "Agents can use RAG for knowledge retrieval【1:0†source】【2:0†source】."
+- The number N corresponds to the [Document N] in the search results
 
 IMPORTANT: Always start your response with one of these indicators:
 - "📚 [RAG-based Answer]" - if your answer is based on retrieved information from the knowledge base
@@ -226,7 +227,7 @@ Always ground your responses in retrieved information and cite sources when usin
         formatted = "📚 Knowledge Base Search Results:\n\n"
         
         for i, result in enumerate(results, 1):
-            formatted += f"[Source {i}] {result['title']}\n"
+            formatted += f"[Document {i}] {result['title']}\n"
             formatted += f"Category: {result['category']}\n"
             formatted += f"Document ID: {result['id']}\n"
             formatted += f"Content: {result['content'][:500]}...\n"  # Limit content length
@@ -234,32 +235,44 @@ Always ground your responses in retrieved information and cite sources when usin
         
         return formatted
     
-    def _format_response_with_citations(self, response: str, search_results: List[Dict[str, Any]]) -> str:
+    def _add_citations_to_response(self, response: str, num_sources: int) -> str:
         """
-        Format the response with automatic citation footer.
-        Ensures sources are always displayed even if LLM doesn't cite them.
+        Automatically add citations to response in Lab 3 style.
         
         Args:
             response: LLM response text
-            search_results: List of search results used
+            num_sources: Number of source documents used
             
         Returns:
-            Response with citations appended
+            Response with citations inserted
         """
-        if not search_results:
+        if num_sources == 0:
             return response
         
-        # Add citation footer
-        citations = "\n\n" + "─" * 60 + "\n"
-        citations += "📚 **Sources Used:**\n\n"
+        # Split response into sentences
+        import re
+        sentences = re.split(r'([.!?]\s+)', response)
         
-        for i, result in enumerate(search_results, 1):
-            citations += f"**[{i}]** {result['title']}\n"
-            citations += f"   • Category: {result['category']}\n"
-            citations += f"   • Document ID: `{result['id']}`\n"
-            citations += f"   • Relevance: {result['score']:.2f}\n\n"
+        # Add citations to key sentences (every 2-3 sentences get a citation)
+        result = ""
+        citation_idx = 1
+        sentence_count = 0
         
-        return response + citations
+        for i, part in enumerate(sentences):
+            result += part
+            
+            # If this is a sentence ending punctuation
+            if re.match(r'[.!?]\s+', part):
+                sentence_count += 1
+                
+                # Add citation every 2-3 sentences
+                if sentence_count % 2 == 0 and citation_idx <= num_sources:
+                    # Insert citation before the space
+                    citation = f"【{citation_idx}:0†source】"
+                    result = result.rstrip() + citation + " "
+                    citation_idx += 1
+        
+        return result.strip()
     
     async def run(self, message: str, thread=None) -> str:
         """
@@ -310,7 +323,7 @@ Always ground your responses in retrieved information and cite sources when usin
 
 User Question: {message}
 
-Please answer based on the search results above. IMPORTANT: You MUST cite sources using [Source N] format where N is the source number. Place citations immediately after claims."""
+Please answer based on the search results above. IMPORTANT: You MUST cite documents using【N:0†source】format where N is the document number (e.g.,【1:0†source】,【2:0†source】). Place citations immediately after claims."""
                         
                         logger.info(f"🔍 Enhanced prompt with {len(search_results)} search results")
                         span.set_attribute("research.mode", "rag")
@@ -322,13 +335,11 @@ User Question: {message}
 Please answer using your general knowledge and indicate that the information is not from the knowledge base."""
                         logger.warning("⚠️  No search results found")
                         span.set_attribute("research.mode", "general_no_results")
-                        search_results = []  # Ensure empty list for citation formatting
                 else:
                     # No search available - use original message
                     enhanced_message = message
                     logger.warning("⚠️  Search not available - using general knowledge")
                     span.set_attribute("research.mode", "general_no_search")
-                    search_results = []  # Ensure empty list for citation formatting
                 
                 # Run the agent with enhanced message and tracing
                 with tracer.start_as_current_span("research.generate") as gen_span:
@@ -341,18 +352,19 @@ Please answer using your general knowledge and indicate that the information is 
                     # Extract text from result
                     response_text = result.text if hasattr(result, 'text') else str(result)
                     
-                    # Add automatic citations footer to ensure sources are always shown
-                    response_with_citations = self._format_response_with_citations(response_text, search_results)
+                    # Add citations automatically if RAG was used
+                    if self.search_client and search_results:
+                        response_text = self._add_citations_to_response(response_text, len(search_results))
+                        gen_span.set_attribute("research.citations_added", len(search_results))
                     
-                    gen_span.set_attribute("gen_ai.completion", mask_content(response_with_citations))
-                    gen_span.set_attribute("gen_ai.response.length", len(response_with_citations))
-                    gen_span.set_attribute("research.citations_added", len(search_results) > 0)
+                    gen_span.set_attribute("gen_ai.completion", mask_content(response_text))
+                    gen_span.set_attribute("gen_ai.response.length", len(response_text))
                 
                 span.set_attribute("research.status", "success")
-                span.set_attribute("research.response_length", len(response_with_citations))
+                span.set_attribute("research.response_length", len(response_text))
                 
-                logger.info(f"✅ {self.name} response: {response_with_citations[:100]}...")
-                return response_with_citations
+                logger.info(f"✅ {self.name} response: {response_text[:100]}...")
+                return response_text
                 
             except Exception as e:
                 logger.error(f"Error running research agent: {e}")
