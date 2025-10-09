@@ -193,13 +193,38 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 #### Codespace 환경 구성 (자동 설정됨)
 Codespace가 시작되면 다음 도구들이 자동으로 설치되어 있습니다:
+
+**기본 도구 및 런타임:**
 - ✅ Azure Developer CLI (azd)
 - ✅ Azure CLI (az)
 - ✅ Python 3.11+
 - ✅ Docker
+- ✅ Git
 - ✅ Visual Studio Code (Web/Desktop)
-- ✅ Jupyter Notebook 확장
-- ✅ 필요한 Python 패키지
+
+**VS Code 확장:**
+- ✅ Python 확장 (ms-python.python)
+- ✅ Pylance (ms-python.vscode-pylance)
+- ✅ Jupyter Notebook (ms-toolsai.jupyter)
+- ✅ Azure Developer CLI (ms-azuretools.azure-dev)
+- ✅ Azure Resources (ms-azuretools.vscode-azureresourcegroups)
+- ✅ Bicep (ms-azuretools.vscode-bicep)
+- ✅ GitHub Copilot (GitHub.copilot)
+
+**Python 패키지 (자동 설치됨):**
+
+Codespace 시작 시 다음 패키지들이 자동으로 설치됩니다:
+- `azure-identity`, `azure-ai-projects`, `azure-ai-inference` - Azure AI 서비스
+- `azure-search-documents` - Azure AI Search
+- `openai`, `python-dotenv`, `requests` - 기본 유틸리티
+- `fastapi`, `uvicorn`, `httpx` - API 서버
+- `azure-monitor-opentelemetry`, `azure-monitor-opentelemetry-exporter` - Observability
+- `opentelemetry-api`, `opentelemetry-sdk` - OpenTelemetry 코어
+- `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-requests`, `opentelemetry-instrumentation-httpx` - 계측
+- `agent-framework[azure-ai]>=1.0.0b251007` - Microsoft Agent Framework
+- `fastmcp>=0.2.0`, `mcp>=1.1.0` - Model Context Protocol
+
+> **💡 참고**: 패키지들은 시스템 전역에 설치되므로, 별도의 가상환경 설정 없이 바로 노트북을 실행할 수 있습니다. 설치 내용은 `.devcontainer/devcontainer.json`의 `postCreateCommand`에 정의되어 있습니다.
 
 #### 로컬 환경에서 실습하는 경우
 로컬에서 실습을 진행하려면 다음을 수동으로 설치해야 합니다:
