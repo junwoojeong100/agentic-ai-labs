@@ -150,7 +150,7 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
    - ⚠️ `contentVector` 차원은 **반드시 3072**이어야 합니다 (text-embedding-3-large 모델 출력)
    - 3072차원(text-embedding-3-small)과 호환되지 않음
 
-> **상세 구현**: 스키마 생성 코드는 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 섹션 4 "Azure AI Search 인덱스 생성"을 참조하세요.
+> **상세 구현**: 스키마 생성 코드는 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 섹션 6 "Azure AI Search 인덱스 생성"을 참조하세요.
 
 ## 🧩 인프라 & 리소스 개요
 
