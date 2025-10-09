@@ -33,7 +33,7 @@
     }
   },
   
-  "postCreateCommand": "pip install --upgrade pip && pip install azure-identity azure-ai-projects azure-ai-inference azure-search-documents openai python-dotenv requests",
+  "postCreateCommand": "pip install --upgrade pip && pip install azure-identity azure-ai-projects azure-ai-inference azure-search-documents openai python-dotenv requests fastapi uvicorn httpx azure-monitor-opentelemetry azure-monitor-opentelemetry-exporter opentelemetry-api opentelemetry-sdk opentelemetry-instrumentation-fastapi opentelemetry-instrumentation-requests opentelemetry-instrumentation-httpx 'agent-framework[azure-ai]>=1.0.0b251007' 'fastmcp>=0.2.0' 'mcp>=1.1.0'",
   
   "forwardPorts": [8000, 8080],
   
