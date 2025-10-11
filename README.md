@@ -81,7 +81,7 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 ## ⚙️ 핵심 기능 요약
 
 ### Azure AI Foundry Agent Service
-- **Agent 생성 및 관리**: GPT-4o 기반 전문화된 Agent
+- **Agent 생성 및 관리**: GPT-5 기반 전문화된 Agent
 - **Connected Agent Pattern**: Agent 간 연결을 통한 협업
 - **Tool Integration**: Azure AI Search, MCP Tools, Function Calling
 - **Thread 관리**: 대화 컨텍스트 유지
@@ -159,7 +159,7 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 | 리소스 | 용도 | 특징 |
 |--------|------|------|
 | Azure AI Foundry Project | Agent 및 AI 서비스 통합 | **Hub-less 독립형 프로젝트 (GA)** |
-| Azure OpenAI | GPT-4o 모델, 텍스트 임베딩 | text-embedding-3-large 포함 |
+| Azure OpenAI | GPT-5 모델, 텍스트 임베딩 | text-embedding-3-large 포함 |
 | Azure AI Search | RAG 지식 베이스 | 벡터 검색, 하이브리드 쿼리 |
 | Azure Container Apps | MCP 서버 및 Agent API 호스팅 | 자동 스케일링, Managed Identity |
 | Azure Container Registry | 컨테이너 이미지 저장 | Private registry |
@@ -308,17 +308,25 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
 
 #### 📓 Lab 1: [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb)
 **섹션 구조:**
-1. 환경 확인 및 설정 (Environment Setup)
+1. 사전 요구 사항 확인 (Prerequisites Check)
 2. Azure 인증 (Azure Authentication)
-3. Bicep 템플릿을 통한 리소스 배포 (Deploy Resources with Bicep)
-4. 배포 결과 확인 (Verify Deployment)
-5. 설정 파일 생성 (Generate Configuration)
+3. 환경 변수 설정 (Environment Configuration)
+4. 모델 설정 (Configure Model)
+5. 인프라 배포 (Deploy Infrastructure)
+6. 배포 결과 확인 (Verify Deployment)
+7. 주요 리소스 연결 정보 저장 (Save Configuration)
+8. Azure Portal에서 확인 (Verify in Azure Portal)
+9. 배포 완료 및 요약 (Deployment Summary)
 
 **주요 내용:**
 - Azure Developer CLI (azd)를 사용한 인프라 배포
 - Azure AI Foundry Project 생성 (Hub-less)
 - Azure OpenAI, AI Search, Container Apps 등 필수 리소스 프로비저닝
 - config.json 파일 자동 생성 및 저장
+
+> **💡 설정 변경 포인트:**
+> - **모델 변경**: 섹션 4의 `model_name`, `model_version` 변수만 수정
+> - **리전 변경**: 섹션 3의 `location` 변수만 수정 (Quota 부족 시)
 
 #### 📓 Lab 2: [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb)
 **섹션 구조:**
@@ -734,10 +742,52 @@ pip install -r src/mcp/requirements.txt
 **참고:** Azure AI SDK는 빠르게 업데이트되므로 최신 버전 사용을 권장합니다.
 
 
-## 📚 참고 자료
+**참고:** Azure AI SDK는 빠르게 업데이트되므로 최신 버전 사용을 권장합니다.
 
-### 공식 문서
-- [Azure AI Foundry Documentation](https://learn.microsoft.com/azure/ai-foundry/)
+---
+
+## 🔄 모델 변경하기
+
+프로젝트는 **환경변수 중심 설계**로 코드 수정 없이 모델을 변경할 수 있습니다.
+
+> **🎯 핵심: 모델 변경은 딱 1곳만!**  
+> **Lab 1 노트북**의 `model_name`과 `model_version` 변수만 수정하면 전체 프로젝트에 자동 반영됩니다.  
+> 다른 파일 수정 불필요!
+
+### 변경 방법
+
+**Lab 1 노트북**에서 모델명과 버전을 변경하여 배포하세요:
+
+```python
+# 01_deploy_azure_resources.ipynb 에서
+model_name = "gpt-5"           # 👈 원하는 모델로 변경
+model_version = "2025-08-07"   # 👈 모델 버전 (모델에 따라 다름)
+model_capacity = 50            # TPM 용량
+```
+
+배포 후에는 `.env` 파일의 `AZURE_AI_MODEL_DEPLOYMENT_NAME` 환경변수만 변경하면 됩니다.
+
+### 지원 모델 예시
+
+| 모델명 | 버전 | 특징 |
+|--------|------|------|
+| `gpt-5` | `2025-08-07` | 논리 중심 및 다단계 작업 최적화 (기본값) |
+| `gpt-5-chat` | `2025-08-07` | 고급 대화형, 멀티모달, 컨텍스트 인식 |
+| `gpt-5-mini` | `2025-08-07` | 경량 버전, 비용 효율적 |
+| `gpt-5-nano` | `2025-08-07` | 속도 최적화, 저지연 애플리케이션 |
+
+**주요 기능:**
+- Context Length: 200,000 토큰
+- 멀티모달 입력 지원 (텍스트, 이미지)
+- 실시간 스트리밍 및 완전한 도구 지원
+- Minimal reasoning 모드 및 "customs" 도구
+- 향상된 안전성 (Jailbreak 방어 84/100)
+
+> **📘 상세 가이드**: [MODEL_CHANGE_GUIDE.md](./MODEL_CHANGE_GUIDE.md) 참조
+
+---
+
+## 📚 참고 자료
 - [Agent Service Guide](https://learn.microsoft.com/azure/ai-foundry/concepts/agents)
 - [Azure AI Search RAG](https://learn.microsoft.com/azure/search/retrieval-augmented-generation-overview)
 - [Model Context Protocol Spec](https://spec.modelcontextprotocol.io/)

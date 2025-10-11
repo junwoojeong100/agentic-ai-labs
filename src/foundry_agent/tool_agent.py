@@ -3,6 +3,7 @@ Tool Agent - Uses MCP Server for various utility functions via Direct Client
 """
 
 import logging
+import os
 from typing import Optional, List, Dict, Any
 import json
 import httpx
@@ -207,7 +208,8 @@ class ToolAgent:
         self.mcp_client: Optional[MCPClient] = None
         
         self.name = "Tool Agent"
-        self.model = "gpt-4o"
+        # Get model deployment name from environment variable (default: gpt-4o)
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
         
         # Create direct MCP client if endpoint is provided
         if mcp_endpoint:

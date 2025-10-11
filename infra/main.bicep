@@ -30,6 +30,15 @@ param deployContainerApps bool = false
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
+@description('OpenAI model deployment name (e.g., gpt-5, gpt-5-chat, gpt-5-mini, gpt-5-nano)')
+param openAiModelName string = 'gpt-5'
+
+@description('OpenAI model version')
+param openAiModelVersion string = '2025-08-07'
+
+@description('OpenAI model SKU capacity')
+param openAiModelCapacity int = 50
+
 // Tags for all resources
 var tags = {
   'azd-env-name': environmentName
@@ -122,15 +131,15 @@ module aiFoundry './core/ai/ai-project.bicep' = {
     storageAccountConnectionName: 'storage-connection'
     deployments: [
       {
-        name: 'gpt-4o'
+        name: openAiModelName
         model: {
           format: 'OpenAI'
-          name: 'gpt-4o'
-          version: '2024-08-06'
+          name: openAiModelName
+          version: openAiModelVersion
         }
         sku: {
           name: 'GlobalStandard'
-          capacity: 50
+          capacity: openAiModelCapacity
         }
       }
       {

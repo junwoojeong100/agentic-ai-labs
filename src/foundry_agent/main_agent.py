@@ -3,6 +3,7 @@ Main Agent - Coordinates between specialized agents
 """
 
 import logging
+import os
 from typing import Optional
 
 from azure.ai.projects import AIProjectClient
@@ -28,6 +29,9 @@ class MainAgent:
         self.agent_id: Optional[str] = None
         self.connected_tools = connected_tools or []
         
+        # Get model deployment name from environment variable (default: gpt-4o)
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
+        
         instructions = """You are the main agent that coordinates between specialized agents.
 
 Your responsibilities:
@@ -42,7 +46,6 @@ Always choose the right agent(s) based on the user's question and provide well-s
         
         self.name = "Main Agent"
         self.instructions = instructions
-        self.model = "gpt-4o"
     
     def create(self) -> str:
         """Create the agent in Azure AI Foundry with Connected Agents."""

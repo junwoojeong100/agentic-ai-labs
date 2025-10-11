@@ -44,13 +44,22 @@ class UserMessage:
 def create_agent_client() -> AzureAIAgentClient:
     """Create Azure AI Agent client with appropriate credential."""
     project_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT")
-    model_deployment = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
+    # Priority: Environment variable > Default fallback
+    # Use the same environment variable as foundry_agent for consistency
+    model_deployment = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME")
     
     if not project_endpoint:
         raise ValueError(
             "AZURE_AI_PROJECT_ENDPOINT not set. "
             "Please set it in .env file or environment variables."
         )
+    
+    if not model_deployment:
+        logger.warning(
+            "AZURE_AI_MODEL_DEPLOYMENT_NAME not set. "
+            "Please set it in .env file. Using 'gpt-5' as fallback."
+        )
+        model_deployment = "gpt-5"
     
     # Use ChainedTokenCredential to support both local dev and Container Apps
     # 1. Try Managed Identity (for Container Apps deployment)

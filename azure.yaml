@@ -15,3 +15,6 @@ infra:
     environmentName: ${AZURE_ENV_NAME}
     location: ${AZURE_LOCATION}
     enableSearch: true
+    openAiModelName: ${openAiModelName}
+    openAiModelVersion: ${openAiModelVersion}
+    openAiModelCapacity: ${openAiModelCapacity}

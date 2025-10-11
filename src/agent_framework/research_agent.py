@@ -48,7 +48,18 @@ class ResearchAgent:
             search_key: Azure AI Search admin key
         """
         self.project_endpoint = project_endpoint
-        self.model_deployment_name = model_deployment_name or "gpt-4o"
+        # Priority: Parameter > Environment variable > Default fallback
+        if model_deployment_name:
+            self.model_deployment_name = model_deployment_name
+        else:
+            self.model_deployment_name = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME")
+            if not self.model_deployment_name:
+                logger.warning(
+                    "AZURE_AI_MODEL_DEPLOYMENT_NAME not set. "
+                    "Using 'gpt-5' as fallback."
+                )
+                self.model_deployment_name = "gpt-5"
+        
         self.search_endpoint = search_endpoint
         self.search_index = search_index
         self.search_key = search_key

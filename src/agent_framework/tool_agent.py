@@ -5,6 +5,7 @@ Uses MCP Server for various utility functions
 
 import asyncio
 import logging
+import os
 import json
 import re
 import httpx
@@ -205,7 +206,18 @@ class ToolAgent:
             mcp_endpoint: Optional MCP server endpoint
         """
         self.project_endpoint = project_endpoint
-        self.model_deployment_name = model_deployment_name or "gpt-4o"
+        # Priority: Parameter > Environment variable > Default fallback
+        if model_deployment_name:
+            self.model_deployment_name = model_deployment_name
+        else:
+            self.model_deployment_name = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME")
+            if not self.model_deployment_name:
+                logger.warning(
+                    "AZURE_AI_MODEL_DEPLOYMENT_NAME not set. "
+                    "Using 'gpt-5' as fallback."
+                )
+                self.model_deployment_name = "gpt-5"
+        
         self.mcp_endpoint = mcp_endpoint
         
         self.agent: Optional[ChatAgent] = None

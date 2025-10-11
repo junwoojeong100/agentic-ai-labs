@@ -3,6 +3,7 @@ Research Agent - Searches knowledge base using Azure AI Search with RAG
 """
 
 import logging
+import os
 from typing import Optional
 
 from azure.ai.projects import AIProjectClient
@@ -75,7 +76,8 @@ class ResearchAgent:
             self.ai_search_tool = None
         
         self.name = "Research Agent"
-        self.model = "gpt-4o"
+        # Get model deployment name from environment variable (default: gpt-4o)
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
         self.instructions = f"""You are a specialized research agent with access to a knowledge base via Azure AI Search.
 
 Your knowledge base contains information about:

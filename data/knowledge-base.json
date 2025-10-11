@@ -20,7 +20,7 @@
   {
     "id": "doc-01-01",
     "title": "에이전트 개발 기초 - 핵심 개념",
-    "content": "### 에이전트 아키텍처\nAzure AI 에이전트는 다음으로 구성됩니다:\n- **Instructions**: 에이전트의 행동과 성격을 정의하는 시스템 프롬프트\n- **Model**: 기본 언어 모델 (예: GPT-4o)\n- **Tools**: 에이전트가 작업을 수행하기 위해 호출할 수 있는 함수\n- **Knowledge**: 에이전트가 참조할 수 있는 정보 소스\n\n### 에이전트 유형\n1. **Main Orchestrator Agents**: 여러 전문 에이전트를 조정\n2. **Specialized Agents**: 특정 도메인이나 작업에 집중\n3. **Connected Agents**: 복잡한 문제를 해결하기 위해 함께 작동하는 에이전트",
+    "content": "### 에이전트 아키텍처\nAzure AI 에이전트는 다음으로 구성됩니다:\n- **Instructions**: 에이전트의 행동과 성격을 정의하는 시스템 프롬프트\n- **Model**: 기본 언어 모델 (예: GPT-5)\n- **Tools**: 에이전트가 작업을 수행하기 위해 호출할 수 있는 함수\n- **Knowledge**: 에이전트가 참조할 수 있는 정보 소스\n\n### 에이전트 유형\n1. **Main Orchestrator Agents**: 여러 전문 에이전트를 조정\n2. **Specialized Agents**: 특정 도메인이나 작업에 집중\n3. **Connected Agents**: 복잡한 문제를 해결하기 위해 함께 작동하는 에이전트",
     "category": "에이전트 개발 기초",
     "section": "1",
     "subsection": "핵심 개념",
@@ -38,7 +38,7 @@
   {
     "id": "doc-01-02",
     "title": "에이전트 개발 기초 - Azure AI Foundry SDK로 에이전트 구축",
-    "content": "Azure AI Foundry SDK는 에이전트를 생성하고 관리하기 위한 Python 기반 인터페이스를 제공합니다:\n\n```python\nfrom azure.ai.projects import AIProjectClient\nfrom azure.identity import DefaultAzureCredential\n\n# Client 초기화\nclient = AIProjectClient.from_connection_string(\n    credential=DefaultAzureCredential(),\n    conn_str=\"your_connection_string\"\n)\n\n# 에이전트 생성\nagent = client.agents.create_agent(\n    model=\"gpt-4o\",\n    name=\"My Agent\",\n    instructions=\"You are a helpful assistant...\"\n)\n```",
+    "content": "Azure AI Foundry SDK는 에이전트를 생성하고 관리하기 위한 Python 기반 인터페이스를 제공합니다:\n\n```python\nfrom azure.ai.projects import AIProjectClient\nfrom azure.identity import DefaultAzureCredential\n\n# Client 초기화\nclient = AIProjectClient.from_connection_string(\n    credential=DefaultAzureCredential(),\n    conn_str=\"your_connection_string\"\n)\n\n# 에이전트 생성\nagent = client.agents.create_agent(\n    model=\"gpt-5\",\n    name=\"My Agent\",\n    instructions=\"You are a helpful assistant...\"\n)\n```",
     "category": "에이전트 개발 기초",
     "section": "1",
     "subsection": "Azure AI Foundry SDK로 에이전트 구축",

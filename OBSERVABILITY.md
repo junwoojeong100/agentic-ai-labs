@@ -349,7 +349,7 @@ Span들이 부모-자식 관계로 연결되어 **Span Tree**를 형성합니다
 ```
 POST /chat (FastAPI Span)
 ├── workflow.router (AI 의도 분류)
-│   └── gen_ai.chat.completions (GPT-4o 호출)
+│   └── gen_ai.chat.completions (GPT-5 호출)
 ├── workflow.executor.tool (Tool Executor)
 │   └── tool_agent.mcp_call (MCP 호출)
 │       └── http.client.request (HTTP 요청)
@@ -414,7 +414,7 @@ OpenTelemetry GenAI 표준 속성:
 | 속성 | 설명 | 예시 값 |
 |------|------|---------|
 | `gen_ai.system` | AI 시스템 종류 | `azure_openai` |
-| `gen_ai.request.model` | 모델 이름 | `gpt-4o` |
+| `gen_ai.request.model` | 모델 이름 | `gpt-5` |
 | `gen_ai.request.temperature` | 온도 설정 | `0.7` |
 | `gen_ai.prompt` | 입력 프롬프트 | `"What is RAG?"` |
 | `gen_ai.completion` | LLM 응답 | `"RAG is..."` |
