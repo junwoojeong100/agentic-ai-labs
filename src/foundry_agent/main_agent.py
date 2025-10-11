@@ -88,51 +88,6 @@ Always choose the right agent(s) based on the user's question and provide well-s
     def get_id(self) -> Optional[str]:
         """Get the agent ID."""
         return self.agent_id
-    
-    def analyze_query(self, user_query: str) -> str:
-        """
-        Generate a prompt for the main agent to analyze which agents to use.
-        
-        Args:
-            user_query: User's question or request
-            
-        Returns:
-            Prompt for analysis
-        """
-        return f"""Analyze this user query and determine which specialized agent(s) to use:
-
-User Query: {user_query}
-
-Available Agents:
-1. MCP Tool Agent - for weather, calculations, time, random numbers
-2. RAG Research Agent - for technical questions, best practices, documentation
-
-Respond with:
-1. Which agent(s) to use and why
-2. What specific question to ask each agent
-3. How to synthesize the final response"""
-    
-    def synthesize_prompt(self, user_query: str, agent_responses: list) -> str:
-        """
-        Generate a prompt for synthesizing agent responses.
-        
-        Args:
-            user_query: Original user query
-            agent_responses: List of responses from specialized agents
-            
-        Returns:
-            Synthesis prompt
-        """
-        import json
-        
-        return f"""Based on the specialized agent responses, provide a comprehensive final answer to the user.
-
-Original Query: {user_query}
-
-Agent Responses:
-{json.dumps(agent_responses, indent=2)}
-
-Synthesize these into a clear, well-structured final response."""
 
     async def run(self, message: str, thread_id: Optional[str] = None) -> str:
         """

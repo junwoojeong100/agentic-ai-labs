@@ -315,8 +315,8 @@ async def chat_with_main_agent(request: AgentRequest):
             # Using Gen AI semantic conventions for Azure AI Foundry compatibility
             span.set_attribute("gen_ai.prompt", mask_text(request.message))
             span.set_attribute("gen_ai.system", "azure_ai_agent")
-            # Get model deployment name from environment variable (default: gpt-4o)
-            model_name = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
+            # Get model deployment name from environment variable (default: gpt-5)
+            model_name = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
             span.set_attribute("gen_ai.request.model", model_name)
             
             logger.info(f"💬 Main Agent request: {request.message[:100]}...")

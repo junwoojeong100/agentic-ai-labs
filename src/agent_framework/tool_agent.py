@@ -236,9 +236,6 @@ class ToolAgent:
 
 You have access to the following MCP tools:
 - get_weather: Get current weather for a city (requires "location" parameter)
-- calculate: Perform calculations (requires "expression" parameter)
-- get_current_time: Get current date and time (no parameters)
-- generate_random_number: Generate random numbers (requires "min" and "max" as integers)
 
 When a user asks a question:
 1. Determine if you need to call a tool
@@ -246,9 +243,7 @@ When a user asks a question:
 3. If no tool needed, respond normally
 
 Examples:
-- "2 + 2는?" → {"tool": "calculate", "arguments": {"expression": "2 + 2"}}
 - "서울 날씨?" → {"tool": "get_weather", "arguments": {"location": "Seoul"}}
-- "지금 몇 시?" → {"tool": "get_current_time", "arguments": {}}
 
 Always respond in Korean when user writes in Korean."""
         else:
@@ -386,14 +381,8 @@ Always respond in Korean when user writes in Korean."""
                         else:
                             result_str = str(tool_result)
                         
-                        if tool_name == "calculate":
-                            final_response = f"계산 결과: {result_str}"
-                        elif tool_name == "get_weather":
+                        if tool_name == "get_weather":
                             final_response = f"날씨 정보: {result_str}"
-                        elif tool_name == "get_current_time":
-                            final_response = f"현재 시간: {result_str}"
-                        elif tool_name == "generate_random_number":
-                            final_response = f"생성된 랜덤 숫자: {result_str}"
                         else:
                             final_response = result_str
                         

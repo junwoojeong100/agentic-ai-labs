@@ -572,36 +572,3 @@ class MainAgentWorkflow:
                 workflow_span.set_attribute("error.message", str(e))
                 workflow_span.record_exception(e)
                 return f"Error: {str(e)}"
-    
-    async def run_interactive(self):
-        """Run interactive conversation loop."""
-        print("\n" + "=" * 80)
-        print("🤖 Agent Framework Multi-Agent Workflow")
-        print("=" * 80)
-        print("\nCapabilities:")
-        print("  🔧 Tool operations (weather, calculations, time)")
-        print("  📚 Knowledge queries (AI, RAG, MCP, agents)")
-        print("  🎯 Complex requests (tool + knowledge combined)")
-        print("  💬 General conversation")
-        print("\nType 'exit' or 'quit' to end.\n")
-        
-        while True:
-            try:
-                user_input = input("You: ").strip()
-                
-                if not user_input:
-                    continue
-                
-                if user_input.lower() in ['exit', 'quit', 'bye']:
-                    print("\n👋 Goodbye!")
-                    break
-                
-                response = await self.run(user_input)
-                print(f"\n{response}\n")
-            
-            except KeyboardInterrupt:
-                print("\n\n👋 Goodbye!")
-                break
-            except Exception as e:
-                logger.error(f"Error: {e}")
-                print(f"\n❌ Error: {e}\n")
