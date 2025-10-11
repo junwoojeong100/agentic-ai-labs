@@ -101,6 +101,10 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
   - Azure AI Search를 통한 RAG 구현
   - 하이브리드 검색 (벡터 + 키워드)
   - 지식 베이스 기반 답변 생성
+  - **자동 Citation 기능**: 
+    - Azure AI Foundry SDK가 자동으로 출처 표시 (예: `【3:0†source】`)
+    - Tracing UI에서 각 citation 클릭 시 원본 문서 확인 가능
+    - 코드 구현 없이 SDK 내장 기능으로 자동 생성
 
 ### MCP (Model Context Protocol) Server
 - **실시간 날씨 정보 서비스**:

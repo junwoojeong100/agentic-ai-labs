@@ -208,8 +208,8 @@ class ToolAgent:
         self.mcp_client: Optional[MCPClient] = None
         
         self.name = "Tool Agent"
-        # Get model deployment name from environment variable (default: gpt-4o)
-        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
+        # Get model deployment name from environment variable (default: gpt-5)
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
         
         # Create direct MCP client if endpoint is provided
         if mcp_endpoint:
@@ -220,9 +220,6 @@ class ToolAgent:
 
 You have access to the following MCP tools:
 - get_weather: Get current weather for a city (requires "location" parameter with city name)
-- calculate: Perform mathematical calculations (requires "expression" parameter)
-- get_current_time: Get current date and time (no parameters needed)
-- generate_random_number: Generate random numbers (requires "min" and "max" parameters as integers)
 
 When a user asks a question:
 1. Determine if you need to call a tool
@@ -231,15 +228,10 @@ When a user asks a question:
 3. If no tool is needed, respond normally
 
 Examples:
-- User: "2 + 2는 얼마인가요?" → {"tool": "calculate", "arguments": {"expression": "2 + 2"}}
 - User: "서울 날씨를 알려주세요" → {"tool": "get_weather", "arguments": {"location": "Seoul"}}
-- User: "지금 몇 시인가요?" → {"tool": "get_current_time", "arguments": {}}
-- User: "1부터 100 사이의 랜덤 숫자" → {"tool": "generate_random_number", "arguments": {"min": 1, "max": 100}}
-- User: "안녕하세요" → 안녕하세요! 무엇을 도와드릴까요?
 
 IMPORTANT: 
 - get_weather requires "location" (NOT "city")
-- generate_random_number requires integer values for min and max (NOT strings)
 
 Always respond in Korean when the user writes in Korean."""
         else:
@@ -295,9 +287,6 @@ Note: MCP server is not yet deployed. Please inform the user that tools are not 
             name="tool_agent",
             description="""Use this agent for:
 - Weather queries (e.g., 'What's the weather in Seoul?')
-- Mathematical calculations (e.g., '2 + 2', 'sqrt(16)', '(10 * 5) + (20 / 4)')
-- Current time and date queries
-- Random number generation (e.g., 'Generate a random number between 1 and 100')
 
 This agent has access to MCP (Model Context Protocol) tools and can execute real-time operations."""
         )
@@ -428,14 +417,8 @@ This agent has access to MCP (Model Context Protocol) tools and can execute real
                         result_str = str(tool_result)
                     
                     # Format the result in Korean
-                    if tool_name == "calculate":
-                        final_response = f"계산 결과: {result_str}"
-                    elif tool_name == "get_weather":
+                    if tool_name == "get_weather":
                         final_response = f"날씨 정보: {result_str}"
-                    elif tool_name == "get_current_time":
-                        final_response = f"현재 시간: {result_str}"
-                    elif tool_name == "generate_random_number":
-                        final_response = f"생성된 랜덤 숫자: {result_str}"
                     else:
                         final_response = result_str
                     

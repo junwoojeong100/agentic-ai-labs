@@ -29,15 +29,15 @@ class MainAgent:
         self.agent_id: Optional[str] = None
         self.connected_tools = connected_tools or []
         
-        # Get model deployment name from environment variable (default: gpt-4o)
-        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
+        # Get model deployment name from environment variable (default: gpt-5)
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
         
         instructions = """You are the main agent that coordinates between specialized agents.
 
 Your responsibilities:
 1. Analyze user requests and determine which specialized agent to use
 2. Delegate tasks to the appropriate connected agent:
-   - Use 'tool_agent' for: weather queries, calculations, time/date, random numbers
+   - Use 'tool_agent' for: weather queries
    - Use 'research_agent' for: technical questions, best practices, documentation searches
 3. You can use multiple agents if the question requires both tools and research
 4. Synthesize responses from connected agents into a clear, comprehensive answer
