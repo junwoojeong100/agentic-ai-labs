@@ -1,4 +1,4 @@
-# Azure AI Foundry Agent Service Lab
+# Agentic AI Labs
 
 Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
 
