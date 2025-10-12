@@ -486,7 +486,7 @@ agentic-ai-labs/
 
 ### Agent Container 환경 변수 (현행화)
 
-Lab 3 실행 시 `src/agent/.env` 파일이 **자동 생성**되며 아래 구조를 기본 포함합니다. 일부 선택 변수는 목적에 따라 추가됩니다.
+Lab 3 실행 시 `src/foundry_agent/.env` 파일이 **자동 생성**되며 아래 구조를 기본 포함합니다. 일부 선택 변수는 목적에 따라 추가됩니다.
 
 ```properties
 # Azure AI Foundry
