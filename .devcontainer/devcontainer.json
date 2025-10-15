@@ -1,6 +1,6 @@
 {
   "name": "Azure AI Foundry Agent Service Lab",
-  "image": "mcr.microsoft.com/devcontainers/python:3.11-bullseye",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
   
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {},
@@ -21,19 +21,22 @@
         "GitHub.copilot"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "/usr/local/bin/python",
+        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
         "python.linting.enabled": true,
         "python.linting.pylintEnabled": true,
         "python.formatting.provider": "black",
         "files.exclude": {
           "**/__pycache__": true,
-          "**/.pytest_cache": true
-        }
+          "**/.pytest_cache": true,
+          "**/.venv": false
+        },
+        "jupyter.notebookFileRoot": "${workspaceFolder}"
       }
     }
   },
   
-  "postCreateCommand": "pip install --upgrade pip && pip install azure-identity azure-ai-projects azure-ai-inference azure-search-documents openai python-dotenv requests fastapi uvicorn httpx azure-monitor-opentelemetry azure-monitor-opentelemetry-exporter opentelemetry-api opentelemetry-sdk opentelemetry-instrumentation-fastapi opentelemetry-instrumentation-requests opentelemetry-instrumentation-httpx 'agent-framework[azure-ai]>=1.0.0b251007' 'fastmcp>=0.2.0' 'mcp>=1.1.0'",
+  "postCreateCommand": "bash .devcontainer/setup.sh",
   
   "forwardPorts": [8000, 8080],
   
