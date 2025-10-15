@@ -2,6 +2,8 @@
 
 Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
 
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/junwoojeong100/agentic-ai-labs?quickstart=1)
+
 ---
 📑 Table of Content
 
@@ -294,13 +296,18 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
 
 ### 1. GitHub Codespace 시작
 
-#### 방법 1: GitHub 웹사이트에서
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/junwoojeong100/agentic-ai-labs?quickstart=1)
+
+#### 방법 1: 위의 버튼 클릭
+위의 "Open in GitHub Codespaces" 버튼을 클릭하면 즉시 Codespace가 시작됩니다.
+
+#### 방법 2: GitHub 웹사이트에서
 1. 이 리포지토리 페이지에서 **Code** 버튼 클릭
 2. **Codespaces** 탭 선택
 3. **Create codespace on main** 클릭
 4. Codespace 환경이 자동으로 구성됩니다 (2-3분 소요)
 
-#### 방법 2: VS Code Desktop에서
+#### 방법 3: VS Code Desktop에서
 1. VS Code에서 Command Palette 열기 (`Cmd+Shift+P` 또는 `Ctrl+Shift+P`)
 2. "Codespaces: Create New Codespace" 입력
 3. 리포지토리 선택: `junwoojeong100/agentic-ai-labs`
