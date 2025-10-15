@@ -203,7 +203,7 @@ Codespace가 시작되면 다음 도구들이 자동으로 설치되어 있습�
 **기본 도구 및 런타임:**
 - ✅ Azure Developer CLI (azd)
 - ✅ Azure CLI (az)
-- ✅ Python 3.11+
+- ✅ **Python 3.12** (가상환경 `.venv` 자동 생성)
 - ✅ Docker
 - ✅ Git
 - ✅ Visual Studio Code (Web/Desktop)
@@ -216,10 +216,11 @@ Codespace가 시작되면 다음 도구들이 자동으로 설치되어 있습�
 - ✅ Azure Resources (ms-azuretools.vscode-azureresourcegroups)
 - ✅ Bicep (ms-azuretools.vscode-bicep)
 - ✅ GitHub Copilot (GitHub.copilot)
+- ✅ GitHub Copilot Chat (GitHub.copilot-chat)
 
 **Python 패키지 (자동 설치됨):**
 
-Codespace 시작 시 다음 패키지들이 자동으로 설치됩니다:
+Codespace 시작 시 `.venv` 가상환경이 생성되고 다음 패키지들이 자동으로 설치됩니다:
 - `azure-identity`, `azure-ai-projects`, `azure-ai-inference` - Azure AI 서비스
 - `azure-search-documents` - Azure AI Search
 - `openai`, `python-dotenv`, `requests` - 기본 유틸리티
@@ -229,8 +230,13 @@ Codespace 시작 시 다음 패키지들이 자동으로 설치됩니다:
 - `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-requests`, `opentelemetry-instrumentation-httpx` - 계측
 - `agent-framework[azure-ai]>=1.0.0b251007` - Microsoft Agent Framework
 - `fastmcp>=0.2.0`, `mcp>=1.1.0` - Model Context Protocol
+- `jupyter`, `ipykernel` - Jupyter Notebook 지원
 
-> **💡 참고**: 패키지들은 시스템 전역에 설치되므로, 별도의 가상환경 설정 없이 바로 노트북을 실행할 수 있습니다. 설치 내용은 `.devcontainer/devcontainer.json`의 `postCreateCommand`에 정의되어 있습니다.
+> **💡 참고**: 
+> - 패키지들은 `.venv` 가상환경에 설치되어 프로젝트 독립성을 보장합니다
+> - Jupyter 커널 "Python 3.12 (agentic-ai-labs)"가 자동으로 등록됩니다
+> - 노트북 실행 시 해당 커널을 선택하세요
+> - 설치 내용은 `requirements.txt` 및 `.devcontainer/setup.sh`에 정의되어 있습니다
 
 #### 로컬 환경에서 실습하는 경우
 로컬에서 실습을 진행하려면 다음을 수동으로 설치해야 합니다:
