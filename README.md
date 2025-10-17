@@ -1,33 +1,33 @@
 # Agentic AI Labs
 
-Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
+Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다.
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/junwoojeong100/agentic-ai-labs?quickstart=1)
 
 ---
-📑 Table of Content
 
-Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 프로젝트입니다. 본 README는 빠른 이해 후 Labs 순서대로 진행하도록 구성되었습니다.
+## 📑 Table of Contents
 
-1. [개요 (Overview)](#개요-overview)
+0. [Table of Contents](#-table-of-contents)
+1. [개요 (Overview)](#-개요-overview)
 2. [아키텍처](#-아키텍처)
-3. [핵심 기능 요약](#핵심-기능-요약)
-4. [사전 요구사항](#-사전-요구사항)
-5. [빠른 시작 (Quick Start)](#-빠른-시작)
-6. [Lab 안내](#lab-안내)
+3. [핵심 기능 요약](#-핵심-기능-요약)
+4. [인프라 & 리소스](#-인프라--리소스-개요)
+5. [빠른 시작 (Quick Start)](#-빠른-시작-quick-start)
+6. [Lab 안내](#-lab-안내)
 7. [프로젝트 구조](#-프로젝트-구조)
-8. [인프라 & 파라미터](#-인프라-파라미터)
-9. [환경 변수 & 설정](#환경-변수--설정)
-10. [Knowledge Base 관리](#-knowledge-base-관리)
-11. [Troubleshooting (요약)](#-문제-해결)
-12. [Cleanup](#-리소스-정리-cleanup)
-13. [참고 자료](#-참고-자료)
-14. [기여하기](#-기여하기)
-15. [라이선스](#-라이선스)
-
-> 상세 관찰성(Tracing, Analytics) 심화는 별도 문서: `OBSERVABILITY.md`
+8. [사전 요구사항](#-사전-요구사항)
+9. [환경 변수 & 설정](#-환경-변수--설정)
+10. [관찰성 (Observability)](#-관찰성-observability)
+11. [리소스 정리 (Cleanup)](#-리소스-정리-cleanup)
+12. [Knowledge Base 관리](#-knowledge-base-관리)
+13. [모델 변경하기](#-모델-변경하기)
+14. [참고 자료](#-참고-자료)
+15. [기여하기](#-기여하기)
+16. [라이선스](#-라이선스)
 
 ---
+
 ## 🎯 개요 (Overview)
 
 이 실습은 **GitHub Codespace** 환경에서 진행되도록 설계되었으며, 다음 Core Pillars를 다룹니다:
@@ -191,6 +191,145 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 > - Queue Storage를 통한 비동기 작업 처리
 > - Table Storage를 활용한 메타데이터 관리
 
+## 🚀 빠른 시작 (Quick Start)
+
+### 1. GitHub Codespace 시작
+
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/junwoojeong100/agentic-ai-labs?quickstart=1)
+
+#### 방법 1: 위의 버튼 클릭
+위의 "Open in GitHub Codespaces" 버튼을 클릭하면 즉시 Codespace가 시작됩니다.
+
+#### 방법 2: GitHub 웹사이트에서
+1. 이 리포지토리 페이지에서 **Code** 버튼 클릭
+2. **Codespaces** 탭 선택
+3. **Create codespace on main** 클릭
+4. Codespace 환경이 자동으로 구성됩니다 (2-3분 소요)
+
+#### 방법 3: VS Code Desktop에서
+1. VS Code에서 Command Palette 열기 (`Cmd+Shift+P` 또는 `Ctrl+Shift+P`)
+2. "Codespaces: Create New Codespace" 입력
+3. 리포지토리 선택: `junwoojeong100/agentic-ai-labs`
+4. Branch 선택: `main`
+
+## 📓 Lab 안내
+
+### 실습 노트북 구성
+
+실습은 4개의 Jupyter 노트북으로 구성되어 있으며, **순서대로 진행**해야 합니다:
+
+#### 📓 Lab 1: [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb)
+**목표**: Azure 인프라 배포 및 설정
+- Azure AI Foundry Project 생성
+- Azure OpenAI, AI Search, Container Apps 등 리소스 프로비저닝
+- `config.json` 자동 생성
+
+#### 📓 Lab 2: [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb)
+**목표**: RAG 지식 베이스 구축
+- AI Search 인덱스 스키마 설계
+- 54개 문서 임베딩 및 인덱싱
+- 하이브리드 검색 테스트
+
+#### 📓 Lab 3: [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb)
+**목표**: Multi-Agent 시스템 배포
+- MCP Server 배포 (Azure Container Apps)
+- Main, Tool, Research Agent 구현
+- 10개 테스트 케이스 실행
+
+#### 📓 Lab 4: [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb)
+**목표**: Agent Framework Workflow 배포
+- Router + Executor 패턴 구현
+- OpenTelemetry 트레이싱 통합
+- Workflow 테스트 및 성능 검증
+
+## 📁 프로젝트 구조
+
+```
+agentic-ai-labs/
+├── infra/                                  # Bicep 인프라 코드
+│   ├── main.bicep                          # 메인 Bicep 템플릿
+│   ├── main.parameters.json                # 파라미터 파일
+│   └── core/                               # 모듈화된 Bicep 리소스
+│       ├── ai/                             # AI Foundry, OpenAI
+│       ├── host/                           # Container Apps
+│       ├── search/                         # AI Search
+│       └── security/                       # Key Vault, RBAC
+│
+├── src/                                    # 소스 코드
+│   ├── foundry_agent/                      # Multi-Agent 구현 (Foundry Agent Service)
+│   │   ├── main_agent.py                   # Main Agent (오케스트레이터)
+│   │   ├── tool_agent.py                   # Tool Agent (MCP 연동)
+│   │   ├── research_agent.py               # Research Agent (RAG)
+│   │   ├── api_server.py                   # Agent API 서버
+│   │   ├── masking.py                      # PII 마스킹 유틸리티
+│   │   ├── requirements.txt
+│   │   └── Dockerfile
+│   ├── agent_framework/                    # Agent Framework Workflow
+│   │   ├── main_agent_workflow.py          # Workflow Router & Orchestrator
+│   │   ├── tool_agent.py                   # Tool Executor (MCP)
+│   │   ├── research_agent.py               # Research Executor (RAG)
+│   │   ├── api_server.py                   # Workflow API 서버
+│   │   ├── test_workflow.py                # Workflow 테스트
+│   │   ├── masking.py                      # PII 마스킹 유틸리티
+│   │   ├── requirements.txt                # OpenTelemetry 패키지 포함
+│   │   └── Dockerfile
+│   └── mcp/                                # MCP 서버
+│       ├── server.py                       # FastMCP 도구 서버
+│       ├── requirements.txt
+│       └── Dockerfile
+│
+├── data/                                   # 지식 베이스
+│   └── knowledge-base.json                 # AI Search 인덱싱용 문서
+│
+├── scripts/                                # 유틸리티 스크립트
+│   └── generate_knowledge_base.py
+│
+├── 01_deploy_azure_resources.ipynb        # Lab 1 노트북
+├── 02_setup_ai_search_rag.ipynb           # Lab 2 노트북
+├── 03_deploy_foundry_agent.ipynb          # Lab 3 노트북
+├── 04_deploy_agent_framework.ipynb        # Lab 4 노트북
+├── azure.yaml                              # azd 설정
+├── config.json                             # 배포 설정 (자동 생성)
+├── OBSERVABILITY.md                        # 관찰성(Tracing/Analytics) 심화 가이드
+└── README.md                               # 이 파일
+```
+
+### 인프라 파라미터
+
+`infra/main.parameters.json`에서 커스터마이즈 가능:
+
+| 파라미터 | 설명 | 기본값 |
+|---------|------|--------|
+| `environmentName` | 환경 이름 | 자동 생성 |
+| `location` | Azure 리전 | `eastus` |
+| `principalId` | 사용자 Principal ID | 자동 감지 |
+
+주요 리소스는 Bicep 템플릿에서 자동으로 생성되며, 리소스 이름은 고유성을 위해 해시가 추가됩니다.
+
+### Azure Developer CLI (azd) 설정
+
+`azure.yaml` 파일은 azd 배포를 위한 메타데이터를 정의합니다:
+
+```yaml
+name: ai-foundry-agent-lab
+infra:
+  path: ./infra
+  module: main
+```
+
+**azd 사용 범위:**
+- **Lab 1**: `azd provision` 명령으로 Azure 인프라 배포 (Bicep 템플릿 기반)
+  - Azure AI Foundry Project, OpenAI, AI Search, Container Apps Environment 등 생성
+  - Container Apps는 생성하지 않고 인프라만 프로비저닝 (약 3-5분 소요)
+- **Lab 3**: Container 배포는 `az containerapp create` 명령으로 수동 진행
+  - MCP Server 및 Agent Service 배포
+  - 더 세밀한 제어와 학습 목적으로 수동 배포 방식 사용
+
+**참고:** 
+- azd는 인프라 프로비저닝(Lab 1)에 주로 사용됩니다
+- 애플리케이션 배포(Lab 3)는 학습 목적상 단계별로 수동 실행합니다
+- `azd up` 대신 `azd provision`을 사용하여 인프라만 빠르게 구성합니다
+
 ## ✅ 사전 요구사항
 
 ### 실습 환경: GitHub Codespace
@@ -298,179 +437,7 @@ az role assignment list --assignee $(az ad signed-in-user show --query id -o tsv
   --role Owner --scope /subscriptions/$(az account show --query id -o tsv)
 ```
 
-## 🚀 빠른 시작 (Quick Start)
-
-### 1. GitHub Codespace 시작
-
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/junwoojeong100/agentic-ai-labs?quickstart=1)
-
-#### 방법 1: 위의 버튼 클릭
-위의 "Open in GitHub Codespaces" 버튼을 클릭하면 즉시 Codespace가 시작됩니다.
-
-#### 방법 2: GitHub 웹사이트에서
-1. 이 리포지토리 페이지에서 **Code** 버튼 클릭
-2. **Codespaces** 탭 선택
-3. **Create codespace on main** 클릭
-4. Codespace 환경이 자동으로 구성됩니다 (2-3분 소요)
-
-#### 방법 3: VS Code Desktop에서
-1. VS Code에서 Command Palette 열기 (`Cmd+Shift+P` 또는 `Ctrl+Shift+P`)
-2. "Codespaces: Create New Codespace" 입력
-3. 리포지토리 선택: `junwoojeong100/agentic-ai-labs`
-4. Branch 선택: `main`
-
-### 2. 실습 노트북 실행
-
-실습은 3개의 Jupyter 노트북으로 구성되어 있습니다:
-
-#### 📓 Lab 1: [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb)
-**섹션 구조:**
-1. 사전 요구 사항 확인 (Prerequisites Check)
-2. Azure 인증 (Azure Authentication)
-3. 환경 변수 설정 (Environment Configuration)
-4. 모델 설정 (Configure Model)
-5. 인프라 배포 (Deploy Infrastructure)
-6. 배포 결과 확인 (Verify Deployment)
-7. 주요 리소스 연결 정보 저장 (Save Configuration)
-8. Azure Portal에서 확인 (Verify in Azure Portal)
-9. 배포 완료 및 요약 (Deployment Summary)
-
-**주요 내용:**
-- Azure Developer CLI (azd)를 사용한 인프라 배포
-- Azure AI Foundry Project 생성 (Hub-less)
-- Azure OpenAI, AI Search, Container Apps 등 필수 리소스 프로비저닝
-- config.json 파일 자동 생성 및 저장
-
-> **💡 설정 변경 포인트:**
-> - **모델 변경**: 섹션 4의 `model_name`, `model_version` 변수만 수정
-> - **리전 변경**: 섹션 3의 `location` 변수만 수정 (Quota 부족 시)
-
-#### 📓 Lab 2: [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb)
-**섹션 구조:**
-1. 사전 요구 사항 확인 (Prerequisites Check)
-2. 패키지 설치 및 설정 로드 (Install Packages & Load Configuration)
-3. Azure 인증 (Azure Authentication)
-4. 지식 베이스 데이터 로드 (Load Knowledge Base Data)
-5. Azure AI Search 인덱스 생성 (Create Search Index)
-6. 문서 임베딩 및 업로드 (Generate Embeddings & Upload)
-7. 하이브리드 검색 테스트 (Hybrid Search Test)
-
-**주요 내용:**
-- AI Search 인덱스 스키마 설계 (벡터 + 키워드)
-- Azure OpenAI로 텍스트 임베딩 생성 (text-embedding-3-large)
-- 54개 AI Agent 관련 문서 인덱싱
-- 하이브리드 검색 (Vector + BM25) 실행 및 검증
-
-#### 📓 Lab 3: [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb)
-**섹션 구조:**
-1. 환경 설정 및 인증 (Setup & Authentication)
-2. Azure AI Search 키 가져오기 (Get Search Key)
-3. Azure AI Search 연결 추가 (Add Azure AI Search Connection)
-4. MCP Server 배포 (Deploy MCP Server)
-5. Agent Container 빌드 및 배포 (Build & Deploy Agent Container)
-   - 5.1. Azure 리소스 확인 (Verify Azure Resources)
-   - 5.2. Agent Service 배포 및 권한 설정 (Deploy with Permissions)
-   - 5.2.1. Agent Service 시작 (Start Agent Service)
-6. 배포된 Agent 테스트 (Test Deployed Agent via HTTP)
-
-**주요 내용:**
-- MCP Server를 Azure Container Apps에 배포 (날씨, 계산기 등 도구)
-- Multi-Agent 시스템 구축 (Main, Tool, Research Agent)
-- Managed Identity 기반 RBAC 권한 설정
-- Connected Agent 패턴으로 Agent 간 협업 구현
-- **자동 환경 변수 설정**: Application Insights + OpenTelemetry 설정이 `.env` 파일에 자동 생성
-- **10개의 다양한 테스트 케이스**: Tool Agent(5), Research Agent(3), 복합 질의(2)
-- 실제 질의를 통한 Multi-Agent 오케스트레이션 검증
-
-#### 📓 Lab 4: [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb)
-**섹션 구조:**
-1. 환경 설정 및 인증 (Setup & Authentication)
-2. Azure AI Search 키 가져오기 (Get Search Key)
-3. Agent Framework Container 빌드 및 배포 (Build & Deploy Container)
-4. Azure 리소스 확인 및 Agent Framework Service 배포 (Deploy with Permissions)
-5. Agent Framework Service 시작 (Start Service)
-6. 배포된 Agent Framework 테스트 (Test Deployed Workflow)
-   - 6.1. Workflow Pattern 테스트 (다양한 질문)
-7. 정리 및 비교 (Summary & Comparison)
-
-**주요 내용:**
-- Microsoft Agent Framework의 Workflow Pattern 구현
-- Router Executor 기반 AI 의도 분류 (rule-based / ai-based)
-- Tool, Research, General, Orchestrator Executor 구성
-- Workflow Context를 통한 메시지 라우팅
-- **OpenTelemetry 트레이싱 완전 구현**
-  - Azure Monitor + Application Insights 통합
-  - FastAPI 자동 계측 (HTTP 요청 추적)
-  - Azure AI Inference 자동 계측 (LLM 호출 추적)
-  - 커스텀 Span 구현 (Router, Executor, MCP, RAG)
-  - PII 마스킹 유틸리티 (Standard/Strict 모드)
-- Connected Agent vs Workflow Pattern 아키텍처 비교
-- **10개 테스트 케이스**: Tool(4), Research(3), Orchestrator(2), General(1)
-
-
-## 📁 프로젝트 구조
-
-```
-agentic-ai-labs/
-├── infra/                                  # Bicep 인프라 코드
-│   ├── main.bicep                          # 메인 Bicep 템플릿
-│   ├── main.parameters.json                # 파라미터 파일
-│   └── core/                               # 모듈화된 Bicep 리소스
-│       ├── ai/                             # AI Foundry, OpenAI
-│       ├── host/                           # Container Apps
-│       ├── search/                         # AI Search
-│       └── security/                       # Key Vault, RBAC
-│
-├── src/                                    # 소스 코드
-│   ├── foundry_agent/                      # Multi-Agent 구현 (Foundry Agent Service)
-│   │   ├── main_agent.py                   # Main Agent (오케스트레이터)
-│   │   ├── tool_agent.py                   # Tool Agent (MCP 연동)
-│   │   ├── research_agent.py               # Research Agent (RAG)
-│   │   ├── api_server.py                   # Agent API 서버
-│   │   ├── masking.py                      # PII 마스킹 유틸리티
-│   │   ├── requirements.txt
-│   │   └── Dockerfile
-│   ├── agent_framework/                    # Agent Framework Workflow
-│   │   ├── main_agent_workflow.py          # Workflow Router & Orchestrator
-│   │   ├── tool_agent.py                   # Tool Executor (MCP)
-│   │   ├── research_agent.py               # Research Executor (RAG)
-│   │   ├── api_server.py                   # Workflow API 서버
-│   │   ├── test_workflow.py                # Workflow 테스트
-│   │   ├── masking.py                      # PII 마스킹 유틸리티
-│   │   ├── requirements.txt                # OpenTelemetry 패키지 포함
-│   │   └── Dockerfile
-│   └── mcp/                                # MCP 서버
-│       ├── server.py                       # FastMCP 도구 서버
-│       ├── requirements.txt
-│       └── Dockerfile
-│
-├── data/                                   # 지식 베이스
-│   └── knowledge-base.json                 # AI Search 인덱싱용 문서
-│
-├── scripts/                                # 유틸리티 스크립트
-│   └── generate_knowledge_base.py
-│
-├── 01_deploy_azure_resources.ipynb        # Lab 1 노트북
-├── 02_setup_ai_search_rag.ipynb           # Lab 2 노트북
-├── 03_deploy_foundry_agent.ipynb          # Lab 3 노트북
-├── 04_deploy_agent_framework.ipynb        # Lab 4 노트북
-├── azure.yaml                              # azd 설정
-├── config.json                             # 배포 설정 (자동 생성)
-├── OBSERVABILITY.md                        # 관찰성(Tracing/Analytics) 심화 가이드
-└── README.md                               # 이 파일
-```
-
-## �️ 인프라 파라미터
-
-`infra/main.parameters.json`에서 커스터마이즈 가능:
-
-| 파라미터 | 설명 | 기본값 |
-|---------|------|--------|
-| `environmentName` | 환경 이름 | 자동 생성 |
-| `location` | Azure 리전 | `eastus` |
-| `principalId` | 사용자 Principal ID | 자동 감지 |
-
-주요 리소스는 Bicep 템플릿에서 자동으로 생성되며, 리소스 이름은 고유성을 위해 해시가 추가됩니다.
+---
 
 ## 🌐 환경 변수 & 설정
 
@@ -577,7 +544,7 @@ AGENT_MASKING_MODE=standard  # standard|strict|off (코드에서 선택적으로
 
 ---
 
-## 📊 Observability: Monitoring & Tracing
+## 📊 관찰성 (Observability)
 
 Azure AI Foundry Agent 시스템의 운영 관찰성을 위한 **Monitoring**과 **Tracing** 기능을 제공합니다.
 
@@ -605,6 +572,7 @@ Monitoring과 Tracing의 차이, 설정 방법, 운영 전략 등 모든 내용�
 - 📊 Kusto 쿼리 예제
 
 ---
+
 ## 🧹 리소스 정리 (Cleanup)
 학습 완료 후 비용을 줄이기 위해 전체 리소스를 제거하려면 **리소스 그룹 삭제**가 가장 간단합니다.
 
@@ -636,30 +604,6 @@ az acr repository delete --name <acrName> --image mcp-server:latest --yes
 
 ---
 
-### Azure Developer CLI (azd) 설정
-
-`azure.yaml` 파일은 azd 배포를 위한 메타데이터를 정의합니다:
-
-```yaml
-name: ai-foundry-agent-lab
-infra:
-  path: ./infra
-  module: main
-```
-
-**azd 사용 범위:**
-- **Lab 1**: `azd provision` 명령으로 Azure 인프라 배포 (Bicep 템플릿 기반)
-  - Azure AI Foundry Project, OpenAI, AI Search, Container Apps Environment 등 생성
-  - Container Apps는 생성하지 않고 인프라만 프로비저닝 (약 3-5분 소요)
-- **Lab 3**: Container 배포는 `az containerapp create` 명령으로 수동 진행
-  - MCP Server 및 Agent Service 배포
-  - 더 세밀한 제어와 학습 목적으로 수동 배포 방식 사용
-
-**참고:** 
-- azd는 인프라 프로비저닝(Lab 1)에 주로 사용됩니다
-- 애플리케이션 배포(Lab 3)는 학습 목적상 단계별로 수동 실행합니다
-- `azd up` 대신 `azd provision`을 사용하여 인프라만 빠르게 구성합니다
-
 ## 📚 Knowledge Base 관리
 
 지식 베이스 문서를 수정하려면:
@@ -677,89 +621,6 @@ python3 scripts/generate_knowledge_base.py
 - Model Context Protocol (MCP)
 - 배포 전략
 - 아키텍처 패턴
-
-## 🐛 문제 해결 (요약 Troubleshooting)
-
-### Agent 생성 실패
-```bash
-# Azure AI Foundry 프로젝트 확인 (Hub-less Project)
-# Azure Portal에서 프로젝트 연결 문자열 및 리소스 ID 확인:
-# https://ai.azure.com > 프로젝트 선택 > Settings > Project properties
-
-# config.json에서 프로젝트 연결 문자열 확인
-cat config.json | grep project_connection_string
-
-# Managed Identity 권한 확인
-az role assignment list \
-  --assignee <managed-identity-principal-id> \
-  --scope <project-resource-id>
-```
-
-**일반적인 원인:**
-- Container App의 Managed Identity에 Azure AI User 역할 미할당
-- 역할 전파 시간 부족 (최대 5-10분 소요)
-- project_connection_string 형식 오류 (형식: `https://<region>.services.ai.azure.com/api/projects/<project-id>`)
-- Azure AI Foundry Project 리소스가 제대로 생성되지 않음
-
-### MCP 서버 배포 실패
-```bash
-# Container App 로그 확인
-az containerapp logs show \
-  --name mcp-server \
-  --resource-group <rg-name> \
-  --follow
-
-# Container Registry 인증 확인
-az acr login --name <registry-name>
-
-# Container App 상태 확인
-az containerapp show \
-  --name mcp-server \
-  --resource-group <rg-name> \
-  --query properties.runningStatus
-```
-
-**일반적인 원인:**
-- Docker 이미지 빌드 실패 (플랫폼 불일치: linux/amd64 필요)
-- Container Registry 접근 권한 부족
-- 포트 설정 오류 (target-port는 8000이어야 함)
-
-### AI Search 인덱싱 실패
-```bash
-# 인덱스 존재 확인
-az search index show \
-  --service-name <search-name> \
-  --name ai-agent-knowledge-base
-
-# 관리 키 확인
-az search admin-key show \
-  --service-name <search-name> \
-  --resource-group <rg-name>
-
-# 인덱서 상태 확인 (있는 경우)
-az search indexer show-status \
-  --service-name <search-name> \
-  --name <indexer-name>
-```
-
-**일반적인 원인:**
-- 잘못된 벡터 차원 (3072이어야 함)
-- 인덱스 스키마 불일치
-- Embedding 모델 배포 안 됨 (text-embedding-3-large)
-
-### Python 패키지 버전 충돌
-```bash
-# 가상 환경 재생성
-python -m venv .venv
-source .venv/bin/activate  # Windows: .venv\Scripts\activate
-pip install -r src/foundry_agent/requirements.txt
-pip install -r src/mcp/requirements.txt
-```
-
-**참고:** Azure AI SDK는 빠르게 업데이트되므로 최신 버전 사용을 권장합니다.
-
-
-**참고:** Azure AI SDK는 빠르게 업데이트되므로 최신 버전 사용을 권장합니다.
 
 ---
 
