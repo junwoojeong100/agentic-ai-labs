@@ -216,7 +216,7 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ### 실습 노트북 구성
 
-실습은 4개의 Jupyter 노트북으로 구성되어 있으며, **순서대로 진행**해야 합니다:
+실습은 5개의 Jupyter 노트북으로 구성되어 있으며, **순서대로 진행**해야 합니다:
 
 #### 📓 Lab 1: [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb)
 **목표**: Azure 인프라 배포 및 설정
@@ -241,6 +241,13 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 - Router + Executor 패턴 구현
 - OpenTelemetry 트레이싱 통합
 - Workflow 테스트 및 성능 검증
+
+#### 📓 Lab 5: [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb)
+**목표**: Microsoft Agent Framework (MAF) 워크플로우 패턴 실습
+- MAF 그래프 기반 워크플로우 오케스트레이션 이해
+- Sequential, Concurrent, Handoff 워크플로우 패턴 구현
+- Azure AI Foundry Agent와 MAF 통합
+- 타입 안전성 및 상태 관리를 통한 복잡한 멀티-에이전트 시나리오 구현
 
 ## 📁 프로젝트 구조
 
@@ -288,6 +295,7 @@ agentic-ai-labs/
 ├── 02_setup_ai_search_rag.ipynb           # Lab 2 노트북
 ├── 03_deploy_foundry_agent.ipynb          # Lab 3 노트북
 ├── 04_deploy_agent_framework.ipynb        # Lab 4 노트북
+├── 05_maf_workflow_patterns.ipynb         # Lab 5 노트북
 ├── azure.yaml                              # azd 설정
 ├── config.json                             # 배포 설정 (자동 생성)
 ├── OBSERVABILITY.md                        # 관찰성(Tracing/Analytics) 심화 가이드
