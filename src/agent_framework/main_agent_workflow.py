@@ -119,6 +119,7 @@ def _initialize_agents():
     # Router Agent - Intelligent intent classifier with detailed agent capabilities
     router_agent = agent_client.create_agent(
         name="RouterAgent",
+        model=os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o"),
         instructions=(
             "Route user queries to the appropriate agent.\n\n"
             "AGENTS:\n"
@@ -144,10 +145,22 @@ def _initialize_agents():
     # General Agent - Handles casual conversation
     general_agent = agent_client.create_agent(
         name="GeneralAgent",
+        model=os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o"),
         instructions=(
-            "You are a friendly general assistant for casual conversation.\n"
-            "Handle greetings, simple questions, and general chat.\n"
-            "Be concise, friendly, and helpful."
+            "You are a friendly general assistant for casual conversation.\n\n"
+            "Your responsibilities:\n"
+            "1. Respond to greetings warmly and naturally\n"
+            "2. Handle simple questions with helpful answers\n"
+            "3. Engage in general chat in a friendly manner\n"
+            "4. Match the user's language (Korean/English)\n\n"
+            "Style:\n"
+            "- Be concise but complete (2-3 sentences)\n"
+            "- Use warm, friendly tone\n"
+            "- Show enthusiasm with appropriate emojis\n\n"
+            "Examples:\n"
+            "- User: '안녕하세요' → '안녕하세요! 반갑습니다. 😊 무엇을 도와드릴까요?'\n"
+            "- User: 'Hello' → 'Hello! Nice to meet you. 👋 How can I help you today?'\n"
+            "- User: 'Thanks!' → '천만에요! 더 도와드릴 것이 있으면 언제든 말씀해 주세요. 😊'"
         ),
     )
     
@@ -256,7 +269,9 @@ async def router_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> No
             
             # Otherwise, ask AI router with enhanced context
             span.set_attribute("router.method", "ai_based")
-            result = await router_agent.run(f"Route this query: {msg.text}")
+            # Create a new thread for this routing request
+            router_thread = router_agent.get_new_thread()
+            result = await router_agent.run(f"Route this query: {msg.text}", thread=router_thread)
             intent = str(result.text if hasattr(result, 'text') else result).strip().lower()
             
             logger.info(f"📊 AI routing → {intent.upper()}")
@@ -287,6 +302,8 @@ async def tool_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> None
     """
     Tool executor that handles external tool operations via MCP.
     """
+    _initialize_agents()  # Ensure agents are initialized
+    
     tracer = trace.get_tracer(__name__)
     
     with tracer.start_as_current_span("workflow.executor.tool") as span:
@@ -301,7 +318,9 @@ async def tool_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> None
                 if not tool_agent_instance.agent:
                     await tool_agent_instance.initialize()
                 
-                actual_result = await tool_agent_instance.run(msg.text)
+                # Create a new thread for this conversation
+                thread = tool_agent_instance.get_new_thread()
+                actual_result = await tool_agent_instance.run(msg.text, thread=thread)
                 span.set_attribute("executor.result_length", len(actual_result))
                 span.set_attribute("executor.status", "success")
                 await ctx.yield_output(f"🔧 [Tool Agent]\n{actual_result}")
@@ -314,7 +333,12 @@ async def tool_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> None
             span.set_attribute("executor.status", "error")
             span.set_attribute("error.message", str(e))
             span.record_exception(e)
-            await ctx.yield_output(f"Error in tool execution: {str(e)}")
+            # Show more detailed error message
+            error_detail = str(e)
+            if "MCP client initialization failed" in error_detail:
+                await ctx.yield_output(f"⚠️ Tool Agent: MCP 서버 연결 실패.\nMCP endpoint가 작동 중인지 확인하세요: {os.getenv('MCP_ENDPOINT')}")
+            else:
+                await ctx.yield_output(f"⚠️ Tool Agent 오류: {error_detail}")
 
 
 @executor(id="research")
@@ -322,6 +346,8 @@ async def research_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> 
     """
     Research executor that handles knowledge queries via RAG.
     """
+    _initialize_agents()  # Ensure agents are initialized
+    
     tracer = trace.get_tracer(__name__)
     
     with tracer.start_as_current_span("workflow.executor.research") as span:
@@ -336,7 +362,9 @@ async def research_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> 
                 if not research_agent_instance.agent:
                     await research_agent_instance.initialize()
                 
-                actual_result = await research_agent_instance.run(msg.text)
+                # Create a new thread for this conversation
+                thread = research_agent_instance.get_new_thread()
+                actual_result = await research_agent_instance.run(msg.text, thread=thread)
                 span.set_attribute("executor.result_length", len(actual_result))
                 span.set_attribute("executor.status", "success")
                 await ctx.yield_output(f"{actual_result}")
@@ -357,6 +385,8 @@ async def general_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> N
     """
     General executor that handles casual conversation.
     """
+    _initialize_agents()  # Ensure agents are initialized
+    
     tracer = trace.get_tracer(__name__)
     
     with tracer.start_as_current_span("workflow.executor.general") as span:
@@ -366,11 +396,43 @@ async def general_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> N
         logger.info(f"💬 General Agent: Processing request")
         
         try:
-            result = await general_agent.run(msg.text)
-            response = str(result.text if hasattr(result, 'text') else result)
-            span.set_attribute("executor.result_length", len(response))
+            # Create a new thread for this conversation (same as research_agent)
+            thread = general_agent.get_new_thread()
+            result = await general_agent.run(msg.text, thread=thread)
+            
+            # Extract response using the same logic as research_agent
+            response_text = None
+            
+            if hasattr(result, 'messages') and result.messages:
+                last_message = result.messages[-1]
+                
+                # Try to get from 'contents' attribute
+                if hasattr(last_message, 'contents') and last_message.contents:
+                    try:
+                        first_content = last_message.contents[0]
+                        if hasattr(first_content, 'text'):
+                            response_text = first_content.text
+                        elif hasattr(first_content, '__getattribute__'):
+                            try:
+                                response_text = getattr(first_content, 'text')
+                            except AttributeError:
+                                pass
+                    except (IndexError, AttributeError, TypeError):
+                        pass
+                
+                # Fallback: Try 'text' attribute on message
+                if not response_text and hasattr(last_message, 'text'):
+                    response_text = last_message.text
+            
+            # Final fallback
+            if not response_text:
+                response_text = "안녕하세요! 무엇을 도와드릴까요?"
+                logger.warning(f"No response extracted, using default greeting")
+            
+            span.set_attribute("executor.result_length", len(response_text))
             span.set_attribute("executor.status", "success")
-            await ctx.yield_output(f"💬 {response}")
+            logger.info(f"✅ General Agent response: {response_text[:100]}...")
+            await ctx.yield_output(f"💬 {response_text}")
         
         except Exception as e:
             logger.error(f"❌ General node error: {e}")
@@ -386,6 +448,8 @@ async def orchestrator_node(msg: UserMessage, ctx: WorkflowContext[UserMessage])
     Orchestrator executor that handles complex requests requiring multiple agents.
     Executes tool and research agents in parallel and combines results.
     """
+    _initialize_agents()  # Ensure agents are initialized
+    
     tracer = trace.get_tracer(__name__)
     
     with tracer.start_as_current_span("workflow.executor.orchestrator") as span:
@@ -410,7 +474,9 @@ async def orchestrator_node(msg: UserMessage, ctx: WorkflowContext[UserMessage])
                 try:
                     if not tool_agent_instance.agent:
                         await tool_agent_instance.initialize()
-                    result = await tool_agent_instance.run(msg.text)
+                    # Create a new thread for this conversation
+                    thread = tool_agent_instance.get_new_thread()
+                    result = await tool_agent_instance.run(msg.text, thread=thread)
                     return f"🔧 [Tool Agent]\n{result}"
                 except Exception as e:
                     logger.error(f"Tool agent error: {e}")
@@ -422,7 +488,9 @@ async def orchestrator_node(msg: UserMessage, ctx: WorkflowContext[UserMessage])
                 try:
                     if not research_agent_instance.agent:
                         await research_agent_instance.initialize()
-                    result = await research_agent_instance.run(msg.text)
+                    # Create a new thread for this conversation
+                    thread = research_agent_instance.get_new_thread()
+                    result = await research_agent_instance.run(msg.text, thread=thread)
                     return result
                 except Exception as e:
                     logger.error(f"Research agent error: {e}")

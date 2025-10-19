@@ -29,9 +29,12 @@ opentelemetry-sdk>=1.20.0
 opentelemetry-instrumentation-fastapi>=0.45b0
 
 # Agent Framework & MCP
-agent-framework[azure-ai]>=1.0.0b251007
-fastmcp>=0.2.0
+agent-framework>=1.0.0b251016
 mcp>=1.1.0
+
+# Microsoft Agent Framework (Official - MAF)
+# Using latest beta version of agent-framework
+# Release: v1.0.0-beta (October 2025)
 
 # Jupyter Support
 ipykernel>=6.29.0

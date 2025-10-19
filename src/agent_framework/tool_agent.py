@@ -120,63 +120,133 @@ class MCPClient:
             logger.error(f"❌ Failed to initialize MCP client: {e}")
             return False
     
-    async def call_tool(self, tool_name: str, arguments: Dict[str, Any]) -> Any:
+    async def call_tool(self, tool_name: str, arguments: Dict[str, Any], max_retries: int = 3) -> Any:
         """
-        Call an MCP tool.
+        Call an MCP tool with retry logic and automatic session recovery.
         
         Args:
             tool_name: Name of the tool to call
             arguments: Tool arguments as a dictionary
+            max_retries: Maximum number of retry attempts (default: 3)
             
         Returns:
             Tool result
         """
-        try:
-            headers = {"Accept": "application/json, text/event-stream"}
-            
-            if self.session_id:
-                headers['mcp-session-id'] = self.session_id
-            
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                call_request = {
-                    "jsonrpc": "2.0",
-                    "id": 3,
-                    "method": "tools/call",
-                    "params": {
-                        "name": tool_name,
-                        "arguments": arguments
+        last_error = None
+        session_reinitialized = False
+        
+        for attempt in range(max_retries):
+            try:
+                # Session validation and reinitialization on retry
+                if attempt > 0 and not session_reinitialized:
+                    logger.warning(f"🔄 Reinitializing MCP session before retry {attempt + 1}/{max_retries}")
+                    reinit_success = await self.initialize()
+                    if reinit_success:
+                        logger.info(f"✅ MCP session reinitialized successfully")
+                        session_reinitialized = True
+                    else:
+                        logger.error(f"❌ Failed to reinitialize MCP session")
+                        # Continue anyway to try with existing session
+                
+                headers = {"Accept": "application/json, text/event-stream"}
+                
+                if self.session_id:
+                    headers['mcp-session-id'] = self.session_id
+                
+                # Increase timeout to 60 seconds
+                async with httpx.AsyncClient(timeout=60.0) as client:
+                    call_request = {
+                        "jsonrpc": "2.0",
+                        "id": 3,
+                        "method": "tools/call",
+                        "params": {
+                            "name": tool_name,
+                            "arguments": arguments
+                        }
                     }
-                }
-                
-                logger.info(f"🔧 Calling MCP tool: {tool_name} with args: {arguments}")
-                
-                response = await client.post(self.mcp_endpoint, json=call_request, headers=headers)
-                response.raise_for_status()
-                
-                # Parse SSE response
-                content = response.text
-                for line in content.split('\n'):
-                    if line.startswith('data: '):
-                        data = json.loads(line[6:])
-                        if 'result' in data:
-                            result = data['result']
-                            logger.info(f"✅ Tool result: {result}")
+                    
+                    if attempt > 0:
+                        logger.info(f"🔁 Retry attempt {attempt + 1}/{max_retries} for tool: {tool_name}")
+                    else:
+                        logger.info(f"🔧 Calling MCP tool: {tool_name} with args: {arguments}")
+                    
+                    response = await client.post(self.mcp_endpoint, json=call_request, headers=headers)
+                    response.raise_for_status()
+                    
+                    # Parse SSE response
+                    content = response.text
+                    for line in content.split('\n'):
+                        if line.startswith('data: '):
+                            data = json.loads(line[6:])
                             
-                            # Extract content from MCP response format
-                            if isinstance(result, dict) and 'content' in result:
-                                content_items = result['content']
-                                if isinstance(content_items, list) and len(content_items) > 0:
-                                    first_item = content_items[0]
-                                    if isinstance(first_item, dict) and 'text' in first_item:
-                                        return first_item['text']
+                            # Check for MCP errors (session expired, etc.)
+                            if 'error' in data:
+                                error_msg = data['error'].get('message', 'Unknown error')
+                                error_code = data['error'].get('code', 0)
+                                logger.warning(f"⚠️  MCP error: {error_msg} (code: {error_code})")
+                                
+                                # Session-related errors should trigger reinitialization
+                                if 'session' in error_msg.lower() or error_code in [-32000, -32001]:
+                                    if attempt < max_retries - 1:
+                                        logger.info(f"🔄 Session error detected, will reinitialize on next attempt")
+                                        raise Exception(f"Session error: {error_msg}")
+                                    else:
+                                        raise Exception(f"MCP session error: {error_msg}")
                             
-                            return result
+                            if 'result' in data:
+                                result = data['result']
+                                logger.info(f"✅ Tool result (attempt {attempt + 1}): {result}")
+                                
+                                # Extract content from MCP response format
+                                if isinstance(result, dict) and 'content' in result:
+                                    content_items = result['content']
+                                    if isinstance(content_items, list) and len(content_items) > 0:
+                                        first_item = content_items[0]
+                                        if isinstance(first_item, dict) and 'text' in first_item:
+                                            return first_item['text']
+                                
+                                return result
+                    
+                    return None
+                    
+            except (httpx.TimeoutException, httpx.ConnectError, httpx.ReadTimeout) as e:
+                last_error = e
+                logger.warning(f"⚠️  MCP call timeout/connection error (attempt {attempt + 1}/{max_retries}): {e}")
+                if attempt < max_retries - 1:
+                    import asyncio
+                    await asyncio.sleep(1 * (attempt + 1))  # Exponential backoff: 1s, 2s, 3s
+                continue
                 
-                return None
+            except httpx.HTTPStatusError as e:
+                last_error = e
+                # Check for session-related HTTP errors (400, 401, 403)
+                if e.response.status_code in [400, 401, 403]:
+                    logger.warning(f"⚠️  HTTP {e.response.status_code} error (attempt {attempt + 1}/{max_retries}): {e}")
+                    if attempt < max_retries - 1:
+                        import asyncio
+                        await asyncio.sleep(1 * (attempt + 1))
+                    continue
+                else:
+                    logger.error(f"❌ HTTP error calling tool {tool_name}: {e}")
+                    raise
                 
-        except Exception as e:
-            logger.error(f"❌ Failed to call tool {tool_name}: {e}")
-            raise
+            except Exception as e:
+                last_error = e
+                error_msg = str(e).lower()
+                
+                # Check if error is session-related
+                if 'session' in error_msg and attempt < max_retries - 1:
+                    logger.warning(f"⚠️  Session error (attempt {attempt + 1}/{max_retries}): {e}")
+                    import asyncio
+                    await asyncio.sleep(1 * (attempt + 1))
+                    continue
+                else:
+                    logger.error(f"❌ Failed to call tool {tool_name}: {e}")
+                    raise
+        
+        # All retries failed
+        logger.error(f"❌ All {max_retries} retry attempts failed for tool {tool_name}")
+        raise Exception(f"MCP call failed after {max_retries} attempts: {last_error}")
     
     async def close(self):
         """Clean up MCP client resources."""
@@ -234,18 +304,24 @@ class ToolAgent:
             
             self.instructions = """You are a specialized agent that uses external tools via MCP.
 
-You have access to the following MCP tools:
+🔧 Available MCP Tools:
 - get_weather: Get current weather for a city (requires "location" parameter)
 
-When a user asks a question:
-1. Determine if you need to call a tool
-2. If yes, respond ONLY with JSON: {"tool": "tool_name", "arguments": {...}}
-3. If no tool needed, respond normally
+📋 How to use tools:
+1. Analyze the user's question
+2. If the question requires a tool (e.g., weather query), respond with ONLY this JSON format:
+   {"tool": "tool_name", "arguments": {"param": "value"}}
+3. If no tool is needed, respond naturally in the user's language
 
-Examples:
-- "서울 날씨?" → {"tool": "get_weather", "arguments": {"location": "Seoul"}}
+✅ Examples:
+- User: "서울 날씨?" → {"tool": "get_weather", "arguments": {"location": "Seoul"}}
+- User: "What's the weather in Tokyo?" → {"tool": "get_weather", "arguments": {"location": "Tokyo"}}
+- User: "뉴욕과 런던의 날씨 알려줘" → {"tool": "get_weather", "arguments": {"location": "New York"}}
 
-Always respond in Korean when user writes in Korean."""
+⚠️ Important:
+- For weather queries, ALWAYS use the tool (return JSON only)
+- Match the user's language (Korean/English)
+- Be precise with location names"""
         else:
             self.instructions = "You are a helpful assistant. MCP tools are not available."
     
@@ -342,6 +418,10 @@ Always respond in Korean when user writes in Korean."""
             try:
                 logger.info(f"Running {self.name} with message: {message[:100]}...")
                 
+                # Create thread if not provided (same as research_agent)
+                if thread is None:
+                    thread = self.agent.get_new_thread()
+                
                 # Get LLM response with tracing
                 with tracer.start_as_current_span("tool_agent.llm_call") as llm_span:
                     llm_span.set_attribute("gen_ai.system", "azure_ai_agent_framework")
@@ -349,7 +429,35 @@ Always respond in Korean when user writes in Korean."""
                     llm_span.set_attribute("gen_ai.prompt", mask_content(message))
                     
                     result = await self.agent.run(message, thread=thread)
-                    response_text = result.text if hasattr(result, 'text') else str(result)
+                    
+                    # Extract response using the same logic as research_agent
+                    response_text = None
+                    
+                    if hasattr(result, 'messages') and result.messages:
+                        last_message = result.messages[-1]
+                        
+                        # Try to get from 'contents' attribute
+                        if hasattr(last_message, 'contents') and last_message.contents:
+                            try:
+                                first_content = last_message.contents[0]
+                                if hasattr(first_content, 'text'):
+                                    response_text = first_content.text
+                                elif hasattr(first_content, '__getattribute__'):
+                                    try:
+                                        response_text = getattr(first_content, 'text')
+                                    except AttributeError:
+                                        pass
+                            except (IndexError, AttributeError, TypeError):
+                                pass
+                        
+                        # Fallback: Try 'text' attribute on message
+                        if not response_text and hasattr(last_message, 'text'):
+                            response_text = last_message.text
+                    
+                    # Final fallback
+                    if not response_text:
+                        response_text = "No response"
+                        logger.warning("No response extracted from tool agent LLM call")
                     
                     llm_span.set_attribute("gen_ai.completion", mask_content(response_text))
                     llm_span.set_attribute("gen_ai.response.length", len(response_text))

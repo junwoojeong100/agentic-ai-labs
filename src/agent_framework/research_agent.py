@@ -360,8 +360,33 @@ Please answer using your general knowledge and indicate that the information is 
                     
                     result = await self.agent.run(enhanced_message, thread=thread)
                     
-                    # Extract text from result
-                    response_text = result.text if hasattr(result, 'text') else str(result)
+                    # Extract response from messages (ChatMessage has 'contents')
+                    response_text = None
+                    
+                    if hasattr(result, 'messages') and result.messages:
+                        last_message = result.messages[-1]
+                        
+                        # Try to get from 'contents' attribute
+                        if hasattr(last_message, 'contents') and last_message.contents:
+                            try:
+                                first_content = last_message.contents[0]
+                                if hasattr(first_content, 'text'):
+                                    response_text = first_content.text
+                                elif hasattr(first_content, '__getattribute__'):
+                                    try:
+                                        response_text = getattr(first_content, 'text')
+                                    except AttributeError:
+                                        pass
+                            except (IndexError, AttributeError, TypeError):
+                                pass
+                        
+                        # Fallback: Try 'text' attribute on message
+                        if not response_text and hasattr(last_message, 'text'):
+                            response_text = last_message.text
+                    
+                    # Final fallback
+                    if not response_text:
+                        response_text = str(result.text if hasattr(result, 'text') else "No response")
                     
                     # Add citations automatically if RAG was used
                     if self.search_client and search_results:
