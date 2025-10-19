@@ -8,7 +8,6 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ## 📑 Table of Contents
 
-0. [Table of Contents](#-table-of-contents)
 1. [개요 (Overview)](#-개요-overview)
 2. [아키텍처](#-아키텍처)
 3. [핵심 기능 요약](#-핵심-기능-요약)
@@ -52,6 +51,8 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ## 🏗️ 아키텍처
 
+### Lab 1-4: Foundry Agent 기반 Multi-Agent 시스템
+
 ```
 ┌────────────────────────────────────────────────────────────┐
 │                 Multi-Agent System                         │
@@ -72,6 +73,47 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 │       └──────────────┘    └────────────────┘              │
 └────────────────────────────────────────────────────────────┘
 ```
+
+### Lab 5: MAF Workflow + Foundry Agent 통합 아키텍처
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│              MAF Workflow Orchestration Layer                    │
+│             (Microsoft Agent Framework - WorkflowBuilder)        │
+│                                                                  │
+│  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐   │
+│  │  Sequential    │  │  Concurrent    │  │  Conditional/  │   │
+│  │  Pattern       │  │  Pattern       │  │  Loop/Handoff  │   │
+│  │                │  │                │  │  Patterns      │   │
+│  │  A → B → C     │  │  ┌→ A         │  │  [조건 분기]    │   │
+│  │  (순차 실행)    │  │  ├→ B         │  │  A → B or C    │   │
+│  │                │  │  └→ C → 통합   │  │  (동적 라우팅)  │   │
+│  └───────┬────────┘  └───────┬────────┘  └───────┬────────┘   │
+│          │                   │                    │            │
+└──────────┼───────────────────┼────────────────────┼────────────┘
+           │                   │                    │
+┌──────────▼───────────────────▼────────────────────▼────────────┐
+│           Azure AI Foundry Agents (Agent Layer)                │
+│                                                                 │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌────────────────┐ │
+│  │  Validator      │  │  Transformer    │  │  Summarizer    │ │
+│  │  Agent          │  │  Agent          │  │  Agent         │ │
+│  │  (Foundry)      │  │  (Foundry)      │  │  (Foundry)     │ │
+│  └─────────────────┘  └─────────────────┘  └────────────────┘ │
+│                                                                 │
+│  ✅ Thread-based State Management                              │
+│  ✅ LLM Integration (GPT-5, GPT-4o, etc.)                      │
+│  ✅ Tool/MCP Server Integration                                │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**MAF Workflow 주요 기능:**
+- **그래프 기반 실행**: `WorkflowBuilder`로 노드와 엣지 정의
+- **@executor 데코레이터**: 각 노드를 함수로 간단히 정의
+- **WorkflowContext**: 노드 간 타입 안전한 데이터 전달
+- **동적 라우팅**: 런타임에 조건부로 다음 노드 선택
+- **병렬 실행**: 여러 노드를 동시에 실행 (asyncio.gather)
+- **상태 관리**: 전체 워크플로우 실행 상태 추적
 
 ### 주요 컴포넌트
 
@@ -121,6 +163,21 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 - **FastMCP 프레임워크**: Python 기반 간편한 MCP 서버 구현
 - **Azure Container Apps 배포**: 확장 가능한 서버리스 호스팅
 - **HTTP/SSE 엔드포인트**: `/mcp` 경로로 MCP 프로토콜 제공
+
+### Microsoft Agent Framework (MAF) - Lab 5
+- **WorkflowBuilder 패턴**: 그래프 기반 워크플로우 오케스트레이션
+- **@executor 데코레이터**: 각 워크플로우 노드를 함수로 간단히 정의
+- **WorkflowContext**: 노드 간 타입 안전한 데이터 전달 및 상태 관리
+- **6가지 워크플로우 패턴 구현**:
+  - **Sequential**: 순차 실행 (A → B → C)
+  - **Concurrent**: 병렬 실행 (A, B, C 동시 실행 → 통합)
+  - **Conditional**: 조건 분기 (조건에 따라 A or B or C 실행)
+  - **Loop**: 반복 개선 (피드백 기반 최대 N회 반복)
+  - **Error Handling**: 오류 감지 및 복구 (재시도, 대체 경로)
+  - **Handoff**: 동적 제어 이전 (복잡도에 따라 전문가 에이전트로 에스컬레이션)
+- **Foundry Agent 통합**: Azure AI Foundry Agent를 MAF Workflow 노드로 사용
+- **비동기 실행**: asyncio 기반 고성능 병렬 처리
+- **타입 안전성**: dataclass 기반 메시지 타입 정의
 
 ### RAG (Retrieval-Augmented Generation)
 - **Azure AI Search 통합**: 벡터 + 키워드 하이브리드 검색
@@ -172,24 +229,9 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 | Azure Key Vault | 비밀 및 키 관리 | RBAC 통합 |
 | Azure Storage Account | 데이터 및 로그 저장 | Blob, Table, Queue |
 
-> **Azure AI Foundry Project 구조**  
-> 이 실습에서는 **Hub 없이 Standalone AI Foundry Project**를 직접 생성하여 사용합니다. 이전의 Hub + Project 구조 대신, 프로젝트 단독으로 필요한 모든 리소스(OpenAI, AI Search 등)를 연결하여 더 간단하고 경량화된 아키텍처를 구현합니다.
-
-> **Key Vault 사용 안내**  
-> Azure Key Vault는 Bicep 템플릿을 통해 배포되지만, 현재 이 실습에서는 직접 사용하지 않습니다. Azure AI Search API 키는 Azure CLI를 통해 직접 조회하여 사용합니다. 향후 프로덕션 환경에서는 Key Vault를 활용하여 다음과 같은 시크릿을 안전하게 관리할 수 있습니다:
-> - Azure AI Search Admin Key
-> - OpenAI API Key  
-> - Database Connection Strings
-> - Container Apps에서 Key Vault Reference를 통한 시크릿 주입
-> - Managed Identity 기반 접근 제어
-
-> **Storage Account 사용 안내**  
-> Azure Storage Account도 인프라 배포 시 생성되지만, 이번 실습에서는 직접 사용하지 않습니다. 현재 실습에서는 JSON 파일 기반으로 AI Search 인덱스를 생성하므로 Blob Storage가 필요하지 않습니다. 향후 확장 시나리오에서는 Storage Account를 다음과 같이 활용할 수 있습니다:
-> - AI Search의 데이터 소스로 Blob Storage 연결 (문서, PDF 등)
-> - Agent 실행 로그 및 대화 기록 저장
-> - 대용량 파일 업로드/다운로드 처리
-> - Queue Storage를 통한 비동기 작업 처리
-> - Table Storage를 활용한 메타데이터 관리
+> **💡 아키텍처 특징**  
+> - **Hub-less AI Foundry Project**: 독립형 프로젝트로 OpenAI, AI Search 등을 직접 연결
+> - **Key Vault & Storage**: 인프라로 배포되지만 이번 실습에서는 미사용 (프로덕션 확장 시 활용 가능)
 
 ## 🚀 빠른 시작 (Quick Start)
 
@@ -244,10 +286,46 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 #### 📓 Lab 5: [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb)
 **목표**: Microsoft Agent Framework (MAF) 워크플로우 패턴 실습
-- MAF 그래프 기반 워크플로우 오케스트레이션 이해
-- Sequential, Concurrent, Handoff 워크플로우 패턴 구현
-- Azure AI Foundry Agent와 MAF 통합
-- 타입 안전성 및 상태 관리를 통한 복잡한 멀티-에이전트 시나리오 구현
+
+**핵심 학습 내용:**
+- **MAF WorkflowBuilder**: 그래프 기반 워크플로우 오케스트레이션
+- **Foundry Agent + MAF 통합**: Azure AI Foundry Agent를 MAF Workflow로 연결
+- **6가지 워크플로우 패턴 구현**:
+  1. **Sequential Pattern** - 순차 실행 (단계별 처리)
+  2. **Concurrent Pattern** - 병렬 실행 (동시 다발적 분석)
+  3. **Conditional Pattern** - 조건 분기 (스타일별 전문가 라우팅)
+  4. **Loop Pattern** - 반복 개선 (피드백 기반 최적화)
+  5. **Error Handling Pattern** - 오류 처리 및 복구
+  6. **Handoff Pattern** - 동적 제어 이전 (복잡도 기반 에스컬레이션)
+
+**실습 시나리오:**
+- 여행 계획 시스템을 통한 Multi-Agent 오케스트레이션
+- 3-5개의 전문가 Agent가 협업하여 완전한 여행 가이드 생성
+- 각 패턴별 실제 실행 결과 및 분석 포함
+
+**기술 스택:**
+- `agent-framework[azure-ai]>=1.0.0b251007` - Microsoft Agent Framework
+- `@executor` 데코레이터 - Workflow 노드 정의
+- `WorkflowContext` - 노드 간 데이터 전달 및 상태 관리
+- Async/Await 기반 비동기 실행
+
+**선행 조건:**
+- ✅ Lab 1-2 완료 (Azure AI Foundry Project 설정)
+- ✅ Python 3.10+ (asyncio 완전 지원)
+- ✅ `agent-framework[azure-ai]` 패키지 (requirements.txt에 포함)
+
+**패턴별 사용 사례:**
+- Sequential: 문서 생성 (초안 → 검토 → 최종본)
+- Concurrent: 다각도 분석 (문화/음식/실용 정보 동시 수집)
+- Conditional: 의도 분류 후 전문가 배정
+- Loop: 품질 개선 (반복적 피드백 적용)
+- Error Handling: 안정적인 예약 시스템
+- Handoff: 고객 지원 에스컬레이션
+
+> **💡 MAF vs Foundry Agent 차이점**  
+> - **Foundry Agent**: 개별 에이전트 정의 (LLM 기반 추론, 도구 호출, Thread 관리)
+> - **MAF Workflow**: 여러 Agent의 실행 흐름 제어 (그래프 기반 오케스트레이션, 조건부 라우팅, 병렬 처리)
+> - **통합 아키텍처**: MAF가 Foundry Agent를 노드로 사용하여 복잡한 멀티-에이전트 시스템 구축
 
 ## 📁 프로젝트 구조
 
@@ -368,15 +446,30 @@ Codespace가 시작되면 다음 도구들이 자동으로 설치되어 있습�
 **Python 패키지 (자동 설치됨):**
 
 Codespace 시작 시 `.venv` 가상환경이 생성되고 다음 패키지들이 자동으로 설치됩니다:
+
+**Azure AI 및 핵심 서비스:**
 - `azure-identity`, `azure-ai-projects`, `azure-ai-inference` - Azure AI 서비스
 - `azure-search-documents` - Azure AI Search
 - `openai`, `python-dotenv`, `requests` - 기본 유틸리티
+
+**API 서버 및 웹:**
 - `fastapi`, `uvicorn`, `httpx` - API 서버
-- `azure-monitor-opentelemetry`, `azure-monitor-opentelemetry-exporter` - Observability
+
+**Observability (관찰성):**
+- `azure-monitor-opentelemetry`, `azure-monitor-opentelemetry-exporter` - Azure Monitor 통합
 - `opentelemetry-api`, `opentelemetry-sdk` - OpenTelemetry 코어
-- `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-requests`, `opentelemetry-instrumentation-httpx` - 계측
+- `opentelemetry-instrumentation-fastapi`, `opentelemetry-instrumentation-requests`, `opentelemetry-instrumentation-httpx` - 자동 계측
+
+**Agent Framework (Lab 5 필수):**
 - `agent-framework[azure-ai]>=1.0.0b251007` - Microsoft Agent Framework
-- `fastmcp>=0.2.0`, `mcp>=1.1.0` - Model Context Protocol
+  - MAF WorkflowBuilder 및 오케스트레이션 기능
+  - Azure AI Foundry Agent 통합
+  - Python 3.10+ 권장 (asyncio 완전 지원)
+
+**MCP (Model Context Protocol):**
+- `fastmcp>=0.2.0`, `mcp>=1.1.0` - Model Context Protocol 서버/클라이언트
+
+**Jupyter Notebook:**
 - `jupyter`, `ipykernel` - Jupyter Notebook 지원
 
 > **💡 참고**: 
