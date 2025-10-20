@@ -48,6 +48,11 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ---
 
+> **📋 시작하기 전에**: [PREREQUISITES.md](./PREREQUISITES.md)에서 사전 요구사항을 확인하세요.  
+> Codespace 사용 시 대부분의 도구가 자동 설치되지만, Azure 구독 및 권한은 미리 준비가 필요합니다.
+
+---
+
 ## 🚀 빠른 시작 (Quick Start)
 
 ### 1️⃣ GitHub Codespace 시작
@@ -519,6 +524,7 @@ model_capacity = 50            # TPM 용량
 
 ### 추가 가이드 📘
 - [PREREQUISITES.md](./PREREQUISITES.md) - 사전 요구사항 상세
+- [DEVCONTAINER.md](./DEVCONTAINER.md) - Dev Container 설정 가이드
 - [CONFIGURATION.md](./CONFIGURATION.md) - 환경 변수 설정 가이드
 - [OBSERVABILITY.md](./OBSERVABILITY.md) - 관찰성 심화 가이드
 - [MODEL_CHANGE_GUIDE.md](./MODEL_CHANGE_GUIDE.md) - 모델 변경 방법
