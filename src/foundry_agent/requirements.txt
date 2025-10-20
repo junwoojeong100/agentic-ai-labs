@@ -1,4 +1,5 @@
 azure-ai-projects>=1.0.0b10
+azure-ai-evaluation>=1.0.0
 azure-identity>=1.17.0
 azure-search-documents>=11.5.0
 azure-ai-inference>=1.0.0b6

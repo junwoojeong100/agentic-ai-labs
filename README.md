@@ -258,7 +258,7 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ### 실습 노트북 구성
 
-실습은 5개의 Jupyter 노트북으로 구성되어 있으며, **순서대로 진행**해야 합니다:
+실습은 6개의 Jupyter 노트북으로 구성되어 있으며, **순서대로 진행**해야 합니다:
 
 #### 📓 Lab 1: [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb)
 **목표**: Azure 인프라 배포 및 설정
@@ -308,6 +308,26 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 - `@executor` 데코레이터 - Workflow 노드 정의
 - `WorkflowContext` - 노드 간 데이터 전달 및 상태 관리
 - Async/Await 기반 비동기 실행
+
+#### 📓 Lab 6: [06_evaluate_agents.ipynb](./06_evaluate_agents.ipynb)
+**목표**: Agent 품질 평가 및 분석
+
+**핵심 학습 내용:**
+- **Azure AI Evaluation SDK**: Agent 성능 측정 및 품질 평가
+- **Performance Evaluators**: 의도 파악, 도구 호출 정확도, 작업 준수도
+- **Operational Metrics**: 실행 시간, 토큰 사용량 모니터링
+- **평가 워크플로우**: 테스트 쿼리 생성 → Agent 실행 → 평가 → 결과 분석
+
+**실습 내용:**
+- 5개의 테스트 쿼리로 Agent 평가
+- ToolCallAccuracy, IntentResolution, TaskAdherence 메트릭 수집
+- 평가 결과 시각화 및 개선 방향 도출
+- Evaluation Agent 생성 및 자동 정리
+
+**출력 파일:**
+- `evals/eval-queries.json` - 테스트 쿼리
+- `evals/eval-input.jsonl` - Agent 실행 결과
+- `evals/eval-output.json` - 평가 점수 및 상세 분석
 
 **선행 조건:**
 - ✅ Lab 1-2 완료 (Azure AI Foundry Project 설정)
@@ -374,8 +394,13 @@ agentic-ai-labs/
 ├── 03_deploy_foundry_agent.ipynb          # Lab 3 노트북
 ├── 04_deploy_agent_framework.ipynb        # Lab 4 노트북
 ├── 05_maf_workflow_patterns.ipynb         # Lab 5 노트북
+├── 06_evaluate_agents.ipynb               # Lab 6 노트북 (Agent 평가)
 ├── azure.yaml                              # azd 설정
 ├── config.json                             # 배포 설정 (자동 생성)
+├── evals/                                  # Evaluation 결과 (Lab 6)
+│   ├── eval-queries.json                   # 테스트 쿼리
+│   ├── eval-input.jsonl                    # Agent 실행 결과
+│   └── eval-output.json                    # 평가 점수
 ├── OBSERVABILITY.md                        # 관찰성(Tracing/Analytics) 심화 가이드
 └── README.md                               # 이 파일
 ```

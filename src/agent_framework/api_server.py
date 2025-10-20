@@ -122,8 +122,8 @@ async def startup_event():
         main_agent = MainAgentWorkflow()
         
         logger.info("✅ Main Agent Workflow initialized")
-        logger.info(f"   Tool Agent (MCP): {'Enabled' if mcp_endpoint else 'Enabled' if mcp_endpoint else 'Disabled (MCP_ENDPOINT not set)'}")
-        logger.info(f"   Research Agent (RAG): {'Enabled' if search_index else 'Disabled (SEARCH_INDEX not set)'}")
+        logger.info(f"   Tool Agent (MCP): {'Enabled (Weather via wttr.in API)' if mcp_endpoint else 'Disabled (MCP_ENDPOINT not set)'}")
+        logger.info(f"   Research Agent (RAG): {'Enabled (Korean Travel Destinations)' if search_index else 'Disabled (SEARCH_INDEX not set)'}")
         logger.info(f"   Orchestrator: Enabled (for complex queries)")
         logger.info("="*60)
         

@@ -78,31 +78,29 @@ class ResearchAgent:
         self.name = "Research Agent"
         # Get model deployment name from environment variable (default: gpt-5)
         self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
-        self.instructions = f"""You are a specialized research agent with access to a knowledge base via Azure AI Search.
+        self.instructions = f"""You are a specialized research agent with access to a travel destination knowledge base via Azure AI Search.
 
-Your knowledge base contains information about:
-- AI Agent development patterns and best practices
-- RAG (Retrieval-Augmented Generation) implementation
-- Model Context Protocol (MCP)
-- Azure AI Foundry Agent Service
-- Deployment strategies and architecture patterns
-- Multi-agent orchestration
-- Connected Agents patterns
+Your knowledge base contains information about Korean travel destinations including:
+- 자연/힐링: Natural healing spots, scenic mountains, valleys, and nature parks
+- 문화/역사: Cultural and historical sites, traditional villages, museums
+- 도시/해변: Urban destinations and beach resorts
+- 액티비티/스포츠: Adventure and sports destinations (surfing, hiking, etc.)
+- 먹거리/시장: Food markets and culinary destinations
 
 Search Configuration:
 - Search Index: {search_index}
 - Query Type: Hybrid (Vector + Keyword)
 - Top Results: 5
 
-When answering questions:
-1. Use the Azure AI Search tool to find relevant information in your knowledge base
-2. Cite specific sources from the search results
-3. Provide comprehensive, well-structured answers
-4. Include code examples when available
-5. Explain concepts clearly with context
+When answering travel-related questions:
+1. Use the Azure AI Search tool to find relevant travel destinations in your knowledge base
+2. Cite specific sources from the search results (mention place names)
+3. Provide comprehensive, well-structured travel recommendations
+4. Include practical information like locations, best times to visit, activities
+5. Explain why each destination matches the user's request
 6. If information is not in the knowledge base, clearly state that
 
-Always ground your responses in retrieved information and cite your sources."""
+Always ground your responses in retrieved information and cite your sources (place names and categories)."""
     
     def create(self) -> str:
         """Create the agent in Azure AI Foundry."""
@@ -151,15 +149,15 @@ Always ground your responses in retrieved information and cite your sources."""
             id=self.agent_id,
             name="research_agent",
             description="""Use this agent for:
-- Technical questions about AI, machine learning, and software development
-- Best practices and architectural patterns
-- Documentation searches and knowledge base queries
-- RAG (Retrieval-Augmented Generation) implementation questions
-- Azure AI Foundry and Agent Service questions
-- Model Context Protocol (MCP) documentation
-- Multi-agent orchestration patterns
+- Travel destination recommendations and tourism information
+- Searching for places to visit in Korea (제주도, 부산, 강원도, etc.)
+- Information about natural healing spots, beaches, mountains, cultural sites
+- Activity-based recommendations (힐링, 서핑, 등산, 문화 체험, etc.)
+- Family-friendly destinations and tourism planning
+- Food markets and culinary destinations
 
-This agent has access to a comprehensive knowledge base via Azure AI Search."""
+This agent has access to a comprehensive Korean travel destination knowledge base via Azure AI Search.
+Use this agent whenever users ask about 여행지, 관광지, 추천, 명소, or specific place names."""
         )
     
     def get_id(self) -> Optional[str]:

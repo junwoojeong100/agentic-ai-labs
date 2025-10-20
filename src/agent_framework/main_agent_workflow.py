@@ -124,18 +124,18 @@ def _initialize_agents():
             "Route user queries to the appropriate agent.\n\n"
             "AGENTS:\n"
             "• tool - Weather info via MCP (get_weather)\n"
-            "• research - Knowledge search via RAG (Agent/MCP/RAG/Azure AI/Deployment)\n"
+            "• research - Travel destination recommendations via RAG (제주도/부산/강원도/관광지/명소)\n"
             "• orchestrator - Complex queries needing both tool + research\n"
             "• general - Casual conversation\n\n"
             "ROUTING:\n"
             "1. Weather queries → tool\n"
-            "2. Knowledge questions (what/how/explain) → research\n"
-            "3. Both weather + knowledge → orchestrator\n"
+            "2. Travel/tourism questions (여행/관광/추천/명소) → research\n"
+            "3. Both weather + travel info → orchestrator\n"
             "4. Greetings/casual → general\n\n"
             "EXAMPLES:\n"
-            "Tokyo weather + explain MCP → orchestrator\n"
-            "Seoul weather? → tool\n"
-            "What is RAG? → research\n"
+            "Seoul weather + recommend attractions → orchestrator\n"
+            "What's the weather in Busan? → tool\n"
+            "제주도 여행 추천 명소 알려줘 → research\n"
             "Hello → general\n"
             "Q: Thanks for your help! → general\n\n"
             "Respond with ONLY ONE WORD: orchestrator, tool, research, or general"
@@ -225,21 +225,23 @@ async def router_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> No
             ]
             
             
-            # Knowledge-focused keywords (nouns only)
+            # Travel/Tourism-focused keywords (nouns only)
             research_keywords = [
-                # Core concepts
-                "mcp", "protocol", "rag", "retrieval", "embedding", "vector",
-                "agent", "orchestration", "handoff", "delegation",
+                # Travel destinations and attractions
+                "travel", "trip", "destination", "tour", "tourism", "visit",
+                "attraction", "sightseeing", "landmark", "spot", "place",
                 
-                # Azure services
-                "azure", "foundry", "search", "index", "openai", "llm",
+                # Korean destinations
+                "jeju", "제주도", "busan", "부산", "seoul", "서울", "강원도",
+                "우도", "성산일출봉", "섭지코지", "한라산", "협재", "애월",
                 
-                # Technical terms
-                "architecture", "pattern", "deployment", "container", "docker",
-                "thread", "tool", "function", "instruction", "prompt",
+                # Travel activities
+                "beach", "mountain", "hiking", "surfing", "healing", "nature",
+                "culture", "history", "museum", "festival", "food", "market",
                 
-                # Korean terms
-                "에이전트", "멀티", "검색", "배포", "아키텍처", "지식"
+                # Korean travel terms
+                "여행", "관광", "명소", "추천", "볼거리", "힐링", "자연",
+                "문화", "역사", "해변", "산", "액티비티", "맛집", "먹거리"
             ]
             
             orchestrator_keywords = [" and ", " also ", " plus ", " additionally ", " moreover "]
