@@ -176,6 +176,7 @@ OTEL_TRACES_SAMPLER_ARG=0.2
 ```properties
 # 마스킹 모드 설정
 AGENT_MASKING_MODE=standard
+```
 
 **마스킹 레벨:**
 - `off`: 마스킹 비활성화 (개발 환경)
