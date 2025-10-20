@@ -137,3 +137,12 @@ Dev Container 설정이 완료되었다면:
 4. `04_deploy_agent_framework.ipynb` 실행
 
 각 노트북의 지침을 따라 진행하세요!
+
+---
+
+## 관련 문서
+
+- [README.md](./README.md) - 프로젝트 개요 및 시작 가이드
+- [PREREQUISITES.md](./PREREQUISITES.md) - 사전 요구사항 및 도구 설치
+- [CONFIGURATION.md](./CONFIGURATION.md) - 환경 변수 및 설정 가이드
+- [.github/codespaces.md](./.github/codespaces.md) - GitHub Codespaces 설정

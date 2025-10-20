@@ -301,7 +301,7 @@ az containerapp show \
 
 - [Azure AI Foundry - GPT-5 모델](https://ai.azure.com/catalog/models/gpt-5)
 - [Azure OpenAI Service Models](https://learn.microsoft.com/azure/ai-services/openai/concepts/models)
-- [README.md - 모델 변경 섹션](./README.md#-모델-변경하기)
+- [README.md - 모델 변경 섹션](./README.md#모델-변경하기)
 - [Lab 1 Notebook](./01_deploy_azure_resources.ipynb)
 
 ---
