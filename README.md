@@ -485,7 +485,7 @@ az group delete --name <resource-group-name> --yes --no-wait
 model_name = "gpt-5"           # 👈 원하는 모델로 변경
 model_version = "2025-08-07"   # 👈 모델 버전 (모델에 따라 다름)
 model_capacity = 50            # TPM 용량
-```python
+```
 
 배포 후에는 `.env` 파일의 `AZURE_AI_MODEL_DEPLOYMENT_NAME` 환경변수만 변경하면 됩니다.
 
