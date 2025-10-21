@@ -258,7 +258,7 @@ python -m ipykernel install --user --name=agentic-ai-labs --display-name="Python
 | 리소스 | 용도 | 예상 비용/월 |
 |--------|------|-------------|
 | Azure AI Foundry Project | Agent 서비스 | $0 (사용량 기반) |
-| Azure OpenAI | GPT-5 모델 | $20-50 (실습 기준) |
+| Azure OpenAI | LLM 모델 (GPT-4o 등) | $20-50 (실습 기준) |
 | Azure AI Search | RAG 검색 | $10-30 |
 | Azure Container Apps | 컨테이너 호스팅 | $10-20 |
 | Azure Container Registry | 이미지 저장 | $5 |

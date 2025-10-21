@@ -30,11 +30,11 @@ param deployContainerApps bool = false
 @description('Id of the user or app to assign application roles')
 param principalId string = ''
 
-@description('OpenAI model deployment name (e.g., gpt-5, gpt-5-chat, gpt-5-mini, gpt-5-nano)')
-param openAiModelName string = 'gpt-5'
+@description('OpenAI model deployment name (e.g., gpt-4o, gpt-4o-mini)')
+param openAiModelName string = 'gpt-4o'
 
 @description('OpenAI model version')
-param openAiModelVersion string = '2025-08-07'
+param openAiModelVersion string = '2024-11-20'
 
 @description('OpenAI model SKU capacity')
 param openAiModelCapacity int = 50

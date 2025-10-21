@@ -18,8 +18,8 @@
 
 ```python
 # 👇 이 2줄만 바꾸면 됩니다!
-model_name = "gpt-5"           # 모델명 변경
-model_version = "2025-08-07"   # 모델 버전 변경 (모델에 따라 다름)
+model_name = "gpt-4o"          # 모델명 변경
+model_version = "2024-11-20"   # 모델 버전 변경 (모델에 따라 다름)
 model_capacity = 50            # TPM 용량 (선택적)
 
 # 셀 실행하면 자동으로 azd 환경변수 설정
@@ -31,7 +31,7 @@ model_capacity = 50            # TPM 용량 (선택적)
 - ✅ 모든 Agent가 동일 모델 사용
 
 > **💡 중요:** 
-> - GPT-5 패밀리(`gpt-5`, `gpt-5-chat`, `gpt-5-mini`, `gpt-5-nano`)는 모두 버전 `2025-08-07` 사용
+> - GPT-4o 패밀리(`gpt-4o`, `gpt-4o-mini`)는 각각 다른 버전 사용
 > - 다른 모델 사용 시 해당 모델의 정확한 버전을 지정해야 함
 > - 버전 확인: [Azure OpenAI Models 문서](https://learn.microsoft.com/azure/ai-services/openai/concepts/models)
 > - 다른 파일(`.env`, `main.bicep` 등)은 수정할 필요 없음!
@@ -73,14 +73,14 @@ location = "eastus"  # 'eastus2', 'westus', 'swedencentral' 등으로 변경
 #### 파일: `infra/main.bicep`
 ```bicep
 # 라인 34-40 파라미터 변경
-param openAiModelName string = 'gpt-5'         # 👈 모델명
-param openAiModelVersion string = '2025-08-07'  # 👈 버전
+param openAiModelName string = 'gpt-4o'        # 👈 모델명
+param openAiModelVersion string = '2024-11-20'  # 👈 버전
 param openAiModelCapacity int = 50              # 👈 용량 (TPM)
 ```
 
 **또는 배포 시 파라미터로 지정:**
 ```bash
-azd up --parameter openAiModelName=gpt-4 --parameter openAiModelVersion=turbo-2024-04-09
+azd up --parameter openAiModelName=gpt-4o-mini --parameter openAiModelVersion=2024-07-18
 ```
 
 ---
@@ -89,25 +89,25 @@ azd up --parameter openAiModelName=gpt-4 --parameter openAiModelVersion=turbo-20
 
 #### 파일: `src/foundry_agent/.env`
 ```bash
-AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5  # 👈 여기만 변경
+AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o  # 👈 여기만 변경
 ```
 
 #### 파일: `src/agent_framework/.env`
 ```bash
-AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5  # 👈 여기만 변경
+AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o  # 👈 여기만 변경
 ```
 
 ---
 
 ## 🚀 빠른 변경 예시
 
-### GPT-5 Chat으로 변경
+### GPT-4o Mini로 변경 (비용 절감)
 
 **Lab 1 노트북 방법 (권장):**
 ```python
 # 01_deploy_azure_resources.ipynb 섹션 4
-model_name = "gpt-5-chat"      # 👈 대화형 모델로 변경
-model_version = "2025-08-07"   # GPT-5 패밀리는 동일 버전
+model_name = "gpt-4o-mini"     # 👈 경량 모델로 변경
+model_version = "2024-07-18"   # GPT-4o-mini 버전
 model_capacity = 50
 
 # 셀 실행 후 배포
@@ -116,29 +116,29 @@ model_capacity = 50
 ### 다른 모델 예시
 
 ```python
-# GPT-5 Mini (경량, 저비용)
-model_name = "gpt-5-mini"
-model_version = "2025-08-07"
+# GPT-4o (기본, 권장)
+model_name = "gpt-4o"
+model_version = "2024-11-20"
 
-# GPT-5 Nano (저지연)
-model_name = "gpt-5-nano"
-model_version = "2025-08-07"
+# GPT-4o Mini (경량, 저비용)
+model_name = "gpt-4o-mini"
+model_version = "2024-07-18"
 ```
 
 **수동 방법:**
 ```bash
 # 1. azd 환경변수 설정
-azd env set openAiModelName gpt-5-chat
-azd env set openAiModelVersion 2025-08-07
+azd env set openAiModelName gpt-4o-mini
+azd env set openAiModelVersion 2024-07-18
 
 # 2. 인프라 배포
 azd provision
 
 # 3. 환경변수 파일 수정 (foundry_agent)
-sed -i 's/AZURE_AI_MODEL_DEPLOYMENT_NAME=.*/AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5-chat/g' src/foundry_agent/.env
+sed -i 's/AZURE_AI_MODEL_DEPLOYMENT_NAME=.*/AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini/g' src/foundry_agent/.env
 
 # 4. 환경변수 파일 수정 (agent_framework)
-sed -i 's/AZURE_AI_MODEL_DEPLOYMENT_NAME=.*/AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5-chat/g' src/agent_framework/.env
+sed -i 's/AZURE_AI_MODEL_DEPLOYMENT_NAME=.*/AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini/g' src/agent_framework/.env
 
 # 5. 컨테이너 재배포 (Lab 3, Lab 4 노트북 재실행)
 ```
@@ -168,18 +168,16 @@ sed -i 's/AZURE_AI_MODEL_DEPLOYMENT_NAME=.*/AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5
 
 | 모델명 | 버전 | 특징 |
 |--------|------|------|
-| `gpt-5` | `2025-08-07` | 논리 중심 및 다단계 작업 최적화 (기본값) |
-| `gpt-5-chat` | `2025-08-07` | 고급 대화형, 멀티모달, 컨텍스트 인식 |
-| `gpt-5-mini` | `2025-08-07` | 경량 버전, 비용 효율적 |
-| `gpt-5-nano` | `2025-08-07` | 속도 최적화, 저지연 애플리케이션 |
+| `gpt-4o` | `2024-11-20` | 멀티모달, 빠른 응답, 비용 효율적 (권장) |
+| `gpt-4o-mini` | `2024-07-18` | 경량 버전, 저비용 |
 
-**GPT-5 패밀리 주요 특징:**
-- **Context Window**: 200,000 토큰
+**GPT-4o 패밀리 주요 특징:**
+- **Context Window**: 128,000 토큰
 - **멀티모달**: 텍스트 및 이미지 입력 지원
-- **Advanced Reasoning**: 논리적 추론 및 다단계 작업에 최적화
-- **Tool Support**: "allowed tools" 및 "preamble" 지원
-- **Safety**: 향상된 안전성 메커니즘 (Jailbreak 방어 84/100)
-- **Training Data**: 2024년 10월까지의 데이터
+- **Fast Response**: 빠른 응답 속도
+- **Tool Support**: Function calling 및 도구 통합
+- **Cost Effective**: 이전 모델 대비 비용 효율적
+- **Training Data**: 2023년 10월까지의 데이터
 
 > **참고**: 모델 버전은 Azure OpenAI Service에서 지원하는 버전을 사용하세요.  
 > [Azure OpenAI Models Documentation](https://learn.microsoft.com/azure/ai-services/openai/concepts/models)
@@ -195,13 +193,13 @@ sed -i 's/AZURE_AI_MODEL_DEPLOYMENT_NAME=.*/AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5
    ↓ (없으면)
 2. 환경변수 (AZURE_AI_MODEL_DEPLOYMENT_NAME)
    ↓ (없으면)
-3. 기본값 (gpt-5) + 경고 로그
+3. 기본값 (gpt-4o) + 경고 로그
 ```
 
 **예시:**
 ```python
 # foundry_agent/main_agent.py
-self.model = model or os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
+self.model = model or os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
 #           ↑ 1순위    ↑ 2순위 환경변수                           ↑ 3순위 기본값
 ```
 
@@ -248,33 +246,33 @@ self.model = model or os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
 
 ```bash
 # 로컬 개발: .env 파일만 수정
-AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5-chat
+AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 
 # Azure Container Apps 환경변수 직접 업데이트
 az containerapp update \
   --name agent-service \
   --resource-group <rg-name> \
-  --set-env-vars AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-5-chat
+  --set-env-vars AZURE_AI_MODEL_DEPLOYMENT_NAME=gpt-4o-mini
 
 # 또는 Lab 3/4 노트북에서 .env 재생성 후 재배포 (권장)
 ```
 
 ### 여러 모델 동시 사용
 
-각 Agent마다 다른 GPT-5 패밀리 모델을 사용할 수 있습니다:
+각 Agent마다 다른 모델을 사용할 수 있습니다:
 
 ```python
-# Main Agent는 gpt-5 (논리 중심)
-main_agent = MainAgent(client, model="gpt-5")
+# Main Agent는 gpt-4o (최신 모델)
+main_agent = MainAgent(client, model="gpt-4o")
 
-# Research Agent는 gpt-5-chat (대화형, 컨텍스트 인식)
-research_agent = ResearchAgent(client, ..., model="gpt-5-chat")
+# Research Agent는 gpt-4o (동일 모델)
+research_agent = ResearchAgent(client, ..., model="gpt-4o")
 
-# Tool Agent는 gpt-5-mini (비용 절감)
-tool_agent = ToolAgent(client, model="gpt-5-mini")
+# Tool Agent는 gpt-4o-mini (비용 절감)
+tool_agent = ToolAgent(client, model="gpt-4o-mini")
 
-# 고속 응답이 필요한 경우 gpt-5-nano
-quick_agent = QuickAgent(client, model="gpt-5-nano")
+# 간단한 작업은 gpt-4o-mini로 처리
+simple_agent = SimpleAgent(client, model="gpt-4o-mini")
 ```
 
 ### 배포 후 모델 확인
@@ -299,8 +297,8 @@ az containerapp show \
 
 ## 📚 참고 자료
 
-- [Azure AI Foundry - GPT-5 모델](https://ai.azure.com/catalog/models/gpt-5)
 - [Azure OpenAI Service Models](https://learn.microsoft.com/azure/ai-services/openai/concepts/models)
+- [GPT-4o Documentation](https://platform.openai.com/docs/models/gpt-4o)
 - [README.md - 모델 변경 섹션](./README.md#모델-변경하기)
 - [Lab 1 Notebook](./01_deploy_azure_resources.ipynb)
 
