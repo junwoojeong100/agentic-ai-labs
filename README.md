@@ -92,6 +92,74 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 | **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF Workflow | 6가지 오케스트레이션 패턴 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
 | **6** | [06_evaluate_agents.ipynb](./06_evaluate_agents.ipynb) | Agent 평가 | 성능 메트릭, 품질 평가, 개선 방향 |
 
+### Lab 1: Azure 인프라 배포
+
+**배포 리소스:**
+- **Azure AI Foundry**: Multi-Agent 개발 플랫폼
+- **Azure OpenAI Service**: GPT-4o, text-embedding-3-large 모델
+- **Azure AI Search**: 벡터 검색 및 RAG 지원
+- **Azure Container Apps Environment**: Agent 서비스 호스팅 환경
+
+**배포 방법:**
+- `azd provision` 명령으로 Bicep 템플릿 기반 자동 배포
+- 약 3-5분 소요, config.json 자동 생성
+- 모든 후속 Lab에서 사용할 기본 인프라 구성
+
+> **💡 Tip**: 배포 후 생성된 `config.json`에 모든 엔드포인트 정보가 저장됩니다.
+
+### Lab 2: RAG 지식 베이스 구축
+
+**구축 프로세스:**
+1. **데이터 준비**: 50개 여행지 문서 (`data/knowledge-base.json`)
+2. **임베딩 생성**: Azure OpenAI text-embedding-3-large (3072차원)
+3. **인덱스 생성**: Azure AI Search에 벡터 인덱스 구성
+4. **검색 테스트**: 하이브리드 검색 (벡터 + 키워드) 검증
+
+**인덱스 스키마:**
+- `id`, `title`, `content`: 문서 기본 정보
+- `category`, `section`, `subsection`: 계층적 분류
+- `contentVector`: 3072차원 벡터 (검색용)
+
+> **💡 Tip**: HNSW 알고리즘으로 빠른 벡터 검색, Semantic Ranker로 정확도 향상
+
+### Lab 3: Multi-Agent 시스템 배포
+
+**Agent 구성:**
+- **Main Agent**: 사용자 질의 분석 및 에이전트 라우팅
+- **Tool Agent**: MCP 프로토콜로 외부 도구 호출
+- **Research Agent**: RAG 기반 지식 검색
+
+**배포 컴포넌트:**
+1. **MCP Server**: Model Context Protocol 서버 (날씨, 계산 도구)
+2. **Agent Service**: Foundry Agent 기반 Multi-Agent 서비스
+3. **Container Apps**: 두 서비스를 Container Apps에 배포
+
+**테스트 시나리오:**
+- 단순 질문 → Research Agent (RAG)
+- 도구 필요 → Tool Agent (MCP)
+- 복합 질의 → 여러 Agent 협업
+
+> **💡 Tip**: AI Foundry의 Tracing 기능으로 Agent 간 상호작용을 시각화할 수 있습니다.
+
+### Lab 4: Agent Framework 배포
+
+**프레임워크 패턴:**
+- **Router Pattern**: 질의 유형에 따라 적절한 Agent로 라우팅
+- **Executor Pattern**: Agent 실행 및 결과 통합
+- **OpenTelemetry**: 분산 추적 및 모니터링
+
+**주요 기능:**
+1. **지능형 라우팅**: LLM 기반 질의 분류
+2. **동적 실행**: 런타임에 Agent 선택 및 실행
+3. **관찰성**: 전체 Agent 호출 체인 추적
+
+**배포 및 테스트:**
+- Container Apps에 Agent Framework 배포
+- REST API 엔드포인트를 통한 테스트
+- Azure Monitor + OpenTelemetry로 성능 모니터링
+
+> **💡 Tip**: 프로덕션 환경에서는 Router Pattern으로 효율적인 Agent 오케스트레이션이 가능합니다.
+
 ### Lab 5: MAF Workflow 패턴 상세
 
 **학습할 6가지 패턴:**
@@ -107,6 +175,30 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 > **💡 MAF vs Foundry Agent**
 > - **Foundry Agent**: 개별 에이전트 (LLM 추론, 도구 호출)
 > - **MAF Workflow**: 에이전트 실행 흐름 제어 (오케스트레이션)
+
+### Lab 6: Agent 평가 및 품질 측정
+
+**평가 프레임워크:**
+- **Azure AI Evaluation SDK**: 자동화된 품질 평가
+- **평가 메트릭**: Groundedness, Relevance, Coherence, Fluency
+- **성능 측정**: 응답 시간, 토큰 사용량, 성공률
+
+**평가 프로세스:**
+1. **테스트 데이터셋 준비**: `evals/eval-input.jsonl` (다양한 질의 시나리오)
+2. **자동 평가 실행**: GPT-4를 evaluator로 활용한 품질 평가
+3. **결과 분석**: 점수 분포, 개선 포인트 식별
+4. **시각화**: `show_eval_results.py`로 평가 결과 대시보드 생성
+
+**평가 항목:**
+- **Groundedness (근거성)**: RAG 문서에 기반한 답변인가?
+- **Relevance (관련성)**: 질문과 관련된 답변인가?
+- **Coherence (일관성)**: 논리적으로 일관된 답변인가?
+- **Fluency (유창성)**: 자연스러운 한국어 표현인가?
+
+> **💡 평가 베스트 프랙티스**
+> - 다양한 질의 유형 포함 (단순 질문, 복잡한 추론, 여러 에이전트 협업)
+> - 정기적인 평가로 성능 변화 추적
+> - 평가 결과를 Agent 개선에 피드백
 
 ---
 
