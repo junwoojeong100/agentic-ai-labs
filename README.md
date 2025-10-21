@@ -86,7 +86,7 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 | Lab | 노트북 | 목표 | 주요 내용 |
 |-----|--------|------|-----------|
 | **1** | [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb) | Azure 인프라 배포 | AI Foundry, OpenAI, AI Search, Container Apps 생성 |
-| **2** | [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb) | RAG 구축 | 인덱스 생성, 54개 문서 임베딩 |
+| **2** | [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb) | RAG 구축 | 인덱스 생성, 50개 문서 임베딩 |
 | **3** | [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb) | Multi-Agent 배포 | Main/Tool/Research Agent, MCP Server 배포 |
 | **4** | [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb) | Agent Framework | Router + Executor 패턴, OpenTelemetry |
 | **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF Workflow | 6가지 오케스트레이션 패턴 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
@@ -243,7 +243,7 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 ### RAG (Retrieval-Augmented Generation)
 - **Azure AI Search 통합**: 벡터 + 키워드 하이브리드 검색
 - **Embedding 모델**: Azure OpenAI text-embedding-3-large (3072차원)
-- **지식 베이스**: 54개 AI Agent 관련 문서 (카테고리별 청킹)
+- **지식 베이스**: 50개 AI Agent 관련 문서 (카테고리별 청킹)
 - **검색 최적화**: HNSW 알고리즘, Top-K=5, Semantic Ranker
 
 > **� 상세 스키마**: Lab 2에서 id, title, content, category, contentVector (3072차원) 필드로 구성된 인덱스를 생성합니다. 자세한 내용은 [`02_setup_ai_search_rag.ipynb`](./02_setup_ai_search_rag.ipynb) 참조.
