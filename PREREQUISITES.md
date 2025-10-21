@@ -80,53 +80,47 @@ jupyter kernelspec list
 #### Azure AI 및 핵심 서비스
 
 ```txt
-azure-identity>=1.17.1
-azure-ai-projects>=1.0.0b2
-azure-ai-inference>=1.0.0b5
+azure-identity>=1.17.0
+azure-core>=1.30.0
+azure-ai-projects>=1.0.0b5
+azure-ai-evaluation>=1.0.0
+azure-ai-inference>=1.0.0b6
 azure-search-documents>=11.4.0
-openai>=1.51.2
+openai>=1.51.0
 python-dotenv>=1.0.0
-requests>=2.32.0
+requests>=2.31.0
 ```
 
 #### API 서버
 
 ```txt
-fastapi>=0.115.4
-uvicorn[standard]>=0.32.0
-httpx>=0.27.2
+fastapi>=0.110.0
+uvicorn>=0.30.0
+httpx>=0.27.0
 ```
 
 #### Observability (관찰성)
 
 ```txt
-azure-monitor-opentelemetry>=1.6.4
-azure-monitor-opentelemetry-exporter>=1.0.0b31
-opentelemetry-api>=1.27.0
-opentelemetry-sdk>=1.27.0
-opentelemetry-instrumentation-fastapi>=0.48b0
-opentelemetry-instrumentation-requests>=0.48b0
-opentelemetry-instrumentation-httpx>=0.48b0
+azure-monitor-opentelemetry>=1.6.0
+azure-monitor-opentelemetry-exporter>=1.0.0b27
+opentelemetry-api>=1.20.0
+opentelemetry-sdk>=1.20.0
+opentelemetry-instrumentation-fastapi>=0.45b0
 ```
 
-#### Agent Framework (Lab 5)
+#### Agent Framework (Lab 5) & MCP
 
 ```txt
-agent-framework[azure-ai]>=1.0.0b251007
-```
-
-#### MCP (Model Context Protocol)
-
-```txt
-fastmcp>=0.2.0
+agent-framework>=1.0.0b251016
 mcp>=1.1.0
 ```
 
 #### Jupyter Notebook
 
 ```txt
-jupyter>=1.1.1
-ipykernel>=6.29.5
+jupyter>=1.0.0
+ipykernel>=6.29.0
 ```
 
 ### Codespace 리소스

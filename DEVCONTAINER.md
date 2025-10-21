@@ -61,9 +61,9 @@ pip list | grep azure
 
 모든 필수 패키지는 `requirements.txt`에 정의되어 있습니다:
 
-- **Azure SDK**: identity, ai-projects, ai-inference, search-documents
+- **Azure SDK**: identity, core, ai-projects (1.0.0b5), ai-inference (1.0.0b6), ai-evaluation, search-documents
 - **OpenAI SDK**: GPT 모델 및 임베딩 API
-- **Agent Framework**: Microsoft Agent Framework
+- **Agent Framework**: Microsoft Agent Framework (1.0.0b251016)
 - **MCP**: Model Context Protocol
 - **FastAPI & Uvicorn**: API 서버
 - **OpenTelemetry**: 관찰성 및 모니터링

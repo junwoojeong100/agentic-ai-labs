@@ -347,7 +347,7 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 | 리소스 | 용도 | 특징 |
 |--------|------|------|
 | Azure AI Foundry Project | Agent 및 AI 서비스 통합 | **Hub-less 독립형 프로젝트 (GA)** |
-| Azure OpenAI | GPT-5 모델, 텍스트 임베딩 | text-embedding-3-large 포함 |
+| Azure OpenAI | LLM 모델, 텍스트 임베딩 | text-embedding-3-large 포함 |
 | Azure AI Search | RAG 지식 베이스 | 벡터 검색, 하이브리드 쿼리 |
 | Azure Container Apps | MCP 서버 및 Agent API 호스팅 | 자동 스케일링, Managed Identity |
 | Azure Container Registry | 컨테이너 이미지 저장 | Private registry |

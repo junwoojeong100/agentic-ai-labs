@@ -19,19 +19,40 @@
 ```json
 {
   "resource_group": "rg-aiagent-xxxxx",
+  "location": "eastus",
+  "project_connection_string": "https://xxx.services.ai.azure.com/api/projects/yyy;subscription_id=...;resource_group=...",
+  "search_endpoint": "https://srch-xxx.search.windows.net/",
+  "search_service_name": "srch-xxx",
+  "container_registry_endpoint": "crxxx.azurecr.io",
+  "container_apps_environment_id": "/subscriptions/.../resourceGroups/.../providers/Microsoft.App/managedEnvironments/cae-xxx",
+  "model_deployment_name": "gpt-4o",
+  "model_version": "2024-11-20",
+  "model_capacity": 50,
+  "search_index": "ai-agent-knowledge-base",
+  "mcp_endpoint": "https://mcp-server.xxx.azurecontainerapps.io",
+  "agent_endpoint": "https://agent-service.xxx.azurecontainerapps.io",
+  "agent_framework_endpoint": "https://agent-framework.xxx.azurecontainerapps.io"
+}
+```
 
 ### 주요 필드 설명
 
 | 필드 | 설명 | 용도 |
 |------|------|------|
+| `resource_group` | 리소스 그룹 이름 | Azure 리소스 관리 |
+| `location` | Azure 리전 | 배포 위치 |
 | `project_connection_string` | Azure AI Foundry 프로젝트 연결 문자열 | Agent SDK 연결 |
 | `search_endpoint` | Azure AI Search 엔드포인트 | RAG 검색 |
 | `search_service_name` | AI Search 서비스 이름 | 관리 작업 |
 | `search_index` | AI Search 인덱스 이름 | RAG 쿼리 대상 |
 | `container_registry_endpoint` | Azure Container Registry 엔드포인트 | Docker 이미지 저장소 |
 | `container_apps_environment_id` | Container Apps Environment ID | 컨테이너 배포 대상 |
+| `model_deployment_name` | 배포된 OpenAI 모델 이름 | LLM 호출 시 사용 |
+| `model_version` | OpenAI 모델 버전 | 모델 버전 추적 |
+| `model_capacity` | 모델 용량 (TPM) | 처리량 설정 |
 | `mcp_endpoint` | 배포된 MCP 서버 엔드포인트 | 도구 호출 |
-| `agent_endpoint` | Agent API 서버 엔드포인트 | REST API 제공 |
+| `agent_endpoint` | Foundry Agent API 서버 엔드포인트 | REST API 제공 (Lab 3) |
+| `agent_framework_endpoint` | Agent Framework API 서버 엔드포인트 | REST API 제공 (Lab 4) |
 
 ---
 
