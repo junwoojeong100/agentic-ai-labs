@@ -347,7 +347,7 @@ name: ai-foundry-agent-lab
 infra:
   path: ./infra
   module: main
-```yaml
+```
 
 **azd 사용 범위:**
 - **Lab 1**: `azd provision` 명령으로 Azure 인프라 배포 (Bicep 템플릿 기반)
