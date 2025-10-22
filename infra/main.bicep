@@ -159,8 +159,8 @@ module aiFoundry './core/ai/ai-project.bicep' = {
 }
 
 // Role assignments for AI Foundry Project
-module aiFoundryRoleUser './core/security/role.bicep' = if (!empty(principalId)) {
-  name: 'ai-foundry-role-user'
+module cognitiveServicesUserRole './core/security/role.bicep' = if (!empty(principalId)) {
+  name: 'cognitive-services-user-role'
   scope: rg
   params: {
     principalId: principalId
@@ -169,8 +169,8 @@ module aiFoundryRoleUser './core/security/role.bicep' = if (!empty(principalId))
   }
 }
 
-module aiFoundryRoleDeveloper './core/security/role.bicep' = if (!empty(principalId)) {
-  name: 'ai-foundry-role-developer'
+module azureAIUserRole './core/security/role.bicep' = if (!empty(principalId)) {
+  name: 'azure-ai-user-role'
   scope: rg
   params: {
     principalId: principalId
@@ -179,8 +179,8 @@ module aiFoundryRoleDeveloper './core/security/role.bicep' = if (!empty(principa
   }
 }
 
-module storageRoleUser './core/security/role.bicep' = if (!empty(principalId)) {
-  name: 'storage-role-user'
+module storageBlobDataContributorRole './core/security/role.bicep' = if (!empty(principalId)) {
+  name: 'storage-blob-data-contributor-role'
   scope: rg
   params: {
     principalId: principalId
