@@ -83,14 +83,14 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 
 실습은 6개의 Jupyter 노트북으로 구성되어 있습니다:
 
-| Lab | 노트북 | 목표 | 주요 내용 |
-|-----|--------|------|-----------|
-| **1** | [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb) | Azure 인프라 배포 | AI Foundry, OpenAI, AI Search, Container Apps 생성 |
-| **2** | [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb) | RAG 구축 | 인덱스 생성, 50개 문서 임베딩 |
-| **3** | [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb) | Multi-Agent 배포 | Main/Tool/Research Agent, MCP Server 배포 |
-| **4** | [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb) | Agent Framework | Router + Executor 패턴, OpenTelemetry |
-| **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF Workflow | 6가지 오케스트레이션 패턴 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
-| **6** | [06_evaluate_agents.ipynb](./06_evaluate_agents.ipynb) | Agent 평가 | 성능 메트릭, 품질 평가, 개선 방향 |
+| Lab | 노트북 | 목표 | Agent 기반 | 워크플로우 패턴 | 주요 내용 |
+|-----|--------|------|-----------|---------------|-----------|
+| **1** | [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb) | Azure 인프라 배포 | - | Bicep IaC | AI Foundry, OpenAI, AI Search, Container Apps 생성 |
+| **2** | [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb) | RAG 구축 | - | Azure AI Search SDK | 인덱스 생성, 50개 문서 임베딩 |
+| **3** | [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb) | Multi-Agent 배포 | **Foundry Agent Service** | **Connected Agent (Handoff)** | Main/Tool/Research Agent, MCP Server 배포 |
+| **4** | [04_deploy_agent_framework.ipynb](./04_deploy_agent_framework.ipynb) | Agent Framework | **Foundry Agent Service** | **Workflow Pattern (Router+Executor)** | AI 기반 라우팅, 병렬 실행, 커스텀 OpenTelemetry |
+| **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF Workflow | Microsoft Agent Framework | WorkflowBuilder | 6가지 오케스트레이션 패턴 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
+| **6** | [06_evaluate_agents.ipynb](./06_evaluate_agents.ipynb) | Agent 평가 | - | Azure AI Evaluation SDK | 성능 메트릭, 품질 평가, 개선 방향 |
 
 ### Lab 1: Azure 인프라 배포
 
@@ -204,15 +204,32 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 
 ## 🏗️ 아키텍처
 
-### Lab 1-4: Foundry Agent 기반 Multi-Agent 시스템
+### Lab 3: Foundry Agent Service - Connected Agent Pattern
+
+**기반 기술:** Azure AI Foundry Agent Service
+
+**오케스트레이션:** Connected Agent Pattern (Handoff 기반)
+
+**주요 특징:**
+- Foundry Agent Service SDK 사용
+- `handoff_to_agent()` API로 Agent 간 연결
+- Thread 기반 대화 컨텍스트 관리
+- Main Agent가 Sub Agent로 작업 위임
+
+**모니터링:**
+- ✅ Application Insights (자동 수집)
+- ✅ OpenTelemetry (SDK 자동 계측)
+- ✅ Prompt/Completion 기록 (`AZURE_TRACING_GEN_AI_CONTENT_RECORDING_ENABLED=true`)
 
 ```text
 ┌────────────────────────────────────────────────────────────┐
-│                 Multi-Agent System                         │
+│         Multi-Agent System (Connected Agent)               │
 │                                                            │
 │  ┌─────────────────────────────────────────────┐          │
 │  │          Main Agent                         │          │
 │  │  (Task Analysis & Agent Routing)            │          │
+│  │  → handoff_to_tool_agent()                  │          │
+│  │  → handoff_to_research_agent()              │          │
 │  └────────────┬────────────────┬────────────────┘          │
 │               │                │                           │
 │       ┌───────▼──────┐  ┌──────▼──────────┐               │
@@ -226,6 +243,72 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 │       └──────────────┘    └────────────────┘              │
 └────────────────────────────────────────────────────────────┘
 ```
+
+### Lab 4: Foundry Agent Service - Workflow Pattern
+
+**기반 기술:** Azure AI Foundry Agent Service (Lab 3과 동일)
+
+**오케스트레이션:** Workflow Pattern (Router + Executor)
+
+**주요 특징:**
+- 동일한 Foundry Agent Service 사용
+- Router Executor로 의도 분류 및 라우팅
+- Workflow Context 기반 상태 관리
+- 병렬 실행 및 복잡한 조건 분기 가능
+
+**모니터링:**
+- ✅ Application Insights (동일한 인프라 사용)
+- ✅ OpenTelemetry (커스텀 계측 구현)
+- ✅ Prompt/Completion 기록 (동일한 설정 변수 사용)
+
+```text
+┌────────────────────────────────────────────────────────────┐
+│      Agent Service - Workflow Pattern                      │
+│                                                            │
+│  ┌──────────────────────────────────────────┐             │
+│  │        Router Executor                   │             │
+│  │   (AI-based Intent Classification)       │             │
+│  └────┬──────┬────────┬────────────┬────────┘             │
+│       │      │        │            │                      │
+│   ┌───▼──┐ ┌▼───┐  ┌─▼────┐   ┌──▼────────┐             │
+│   │ Tool │ │Research│ │General│ │Orchestrator│            │
+│   │Exec  │ │Executor│ │Executor│ │Executor  │             │
+│   └───┬──┘ └┬───┘  └─┬────┘   └──┬────────┘             │
+│       │     │        │            │                      │
+│   ┌───▼─────▼────────▼────────────▼──────┐               │
+│   │      Workflow Context                │               │
+│   │   (Message Passing & Output)         │               │
+│   └──────────────────────────────────────┘               │
+│                                                            │
+│   External Resources:                                     │
+│   ┌──────────────┐    ┌────────────────┐                 │
+│   │  MCP Server  │    │  Azure AI      │                 │
+│   │  (Tools)     │    │  Search (RAG)  │                 │
+│   └──────────────┘    └────────────────┘                 │
+└────────────────────────────────────────────────────────────┘
+```
+
+**Lab 3 vs Lab 4 핵심 차이:**
+
+| 특성 | Lab 3 (Connected Agent) | Lab 4 (Workflow Pattern) |
+|------|------------------------|-------------------------|
+| **Agent 기반** | ✅ Foundry Agent Service | ✅ Foundry Agent Service |
+| **워크플로우 패턴** | Connected Agent (Handoff) | Workflow Pattern (Router+Executor) |
+| **라우팅 방식** | `handoff_to_agent()` API | Router Executor 함수 |
+| **실행 흐름** | Main → Handoff → Sub Agent | Router → Executor → Output |
+| **상태 관리** | Thread 기반 | Workflow Context 기반 |
+| **병렬 실행** | 순차 Handoff | Orchestrator 병렬 가능 |
+
+> **💡 공통점 (Agent 및 모니터링):**
+> - ✅ 두 Lab 모두 **동일한 Azure AI Foundry Agent Service** 사용
+> - ✅ 두 Lab 모두 **동일한 Application Insights** 사용
+> - ✅ 두 Lab 모두 **동일한 OpenTelemetry 설정** 사용
+> - ✅ 두 Lab 모두 **동일한 환경 변수**로 제어
+> - ✅ MCP Server 및 Azure AI Search 연동도 동일
+> 
+> **🎯 차이점 (오케스트레이션):**
+> - Lab 3: **Connected Agent Pattern** - Handoff API로 Agent 간 순차적 작업 위임
+> - Lab 4: **Workflow Pattern** - Router와 Executor로 유연한 흐름 제어 및 병렬 실행
 
 ### Lab 5: MAF Workflow + Foundry Agent 통합 아키텍처
 

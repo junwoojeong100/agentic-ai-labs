@@ -53,14 +53,19 @@ Azure AI Foundry에서 Agent 시스템을 관찰하는 계층:
 
 ### 1.2. 이 실습에서 구현된 패턴
 
-| Agent 패턴 | Notebook | 구현 방식 | Observability 특징 |
-|-----------|----------|----------|-------------------|
-| **Foundry Agent** | Lab 3 | Azure Agent Service | ✅ Azure 자동 계측 (코드 최소화) |
-| **Agent Framework** | Lab 4 | Microsoft Agent Framework | ✅ 커스텀 OpenTelemetry 계측 (완전 제어) |
+| 구분 | Lab 3 | Lab 4 |
+|------|-------|-------|
+| **Notebook** | 03_deploy_foundry_agent.ipynb | 04_deploy_agent_framework.ipynb |
+| **Agent 기반** | ✅ Azure AI Foundry Agent Service | ✅ Azure AI Foundry Agent Service |
+| **워크플로우 패턴** | Connected Agent (Handoff) | Workflow Pattern (Router+Executor) |
+| **Monitoring** | ✅ Application Insights + OpenTelemetry | ✅ Application Insights + OpenTelemetry |
+| **Tracing** | ✅ Content Recording 지원 | ✅ Content Recording 지원 |
+| **환경 변수** | 동일한 OTEL 설정 | 동일한 OTEL 설정 |
 
-> **💡 학습 포인트**  
-> - Lab 3: Azure가 제공하는 자동 계측 경험
-> - Lab 4: 직접 OpenTelemetry를 구현하여 두 가지 접근 방식의 장단점 비교
+> **💡 핵심 포인트**  
+> - 두 Lab 모두 **동일한 Azure AI Foundry Agent Service**를 사용합니다
+> - **Observability 설정 (Monitoring & Tracing)도 동일**합니다
+> - 차이점은 **워크플로우 오케스트레이션 패턴**입니다 (Connected Agent vs Workflow Pattern)
 
 ---
 
