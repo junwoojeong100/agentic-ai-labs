@@ -174,7 +174,7 @@ module aiFoundryRoleDeveloper './core/security/role.bicep' = if (!empty(principa
   scope: rg
   params: {
     principalId: principalId
-    roleDefinitionId: '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer
+    roleDefinitionId: '53ca6127-db72-4b80-b1b0-d745d6d5456d' // Azure AI User
     principalType: 'User'
   }
 }
@@ -338,7 +338,7 @@ module agentMainAIRole './core/security/role.bicep' = if (deployContainerApps) {
   scope: rg
   params: {
     principalId: agentMain!.outputs.identityPrincipalId
-    roleDefinitionId: '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer (required for agents/write)
+    roleDefinitionId: '53ca6127-db72-4b80-b1b0-d745d6d5456d' // Azure AI User (required for agents/write)
     principalType: 'ServicePrincipal'
   }
 }
@@ -358,7 +358,7 @@ module agentResearcherAIRole './core/security/role.bicep' = if (deployContainerA
   scope: rg
   params: {
     principalId: agentResearcher!.outputs.identityPrincipalId
-    roleDefinitionId: '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer
+    roleDefinitionId: '53ca6127-db72-4b80-b1b0-d745d6d5456d' // Azure AI User
     principalType: 'ServicePrincipal'
   }
 }
@@ -378,7 +378,7 @@ module agentWriterAIRole './core/security/role.bicep' = if (deployContainerApps)
   scope: rg
   params: {
     principalId: agentWriter!.outputs.identityPrincipalId
-    roleDefinitionId: '64702f94-c441-49e6-a78b-ef80e0188fee' // Azure AI Developer
+    roleDefinitionId: '53ca6127-db72-4b80-b1b0-d745d6d5456d' // Azure AI User
     principalType: 'ServicePrincipal'
   }
 }
