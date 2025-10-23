@@ -105,6 +105,7 @@ Always choose the right agent(s) based on the user's question and provide well-s
         Returns:
             Agent response
         """
+        thread = None
         try:
             # ========================================================================
             # 🔍 OpenTelemetry Span for Agent Execution Tracing
@@ -175,3 +176,11 @@ Always choose the right agent(s) based on the user's question and provide well-s
         except Exception as e:
             logger.error(f"Error running main agent: {e}")
             raise
+        finally:
+            # Clean up thread to prevent resource leaks
+            if thread:
+                try:
+                    self.project_client.agents.threads.delete(thread.id)
+                    logger.debug(f"Thread {thread.id} deleted")
+                except Exception as cleanup_error:
+                    logger.warning(f"Failed to delete thread {thread.id}: {cleanup_error}")

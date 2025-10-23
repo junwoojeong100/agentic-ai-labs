@@ -5,6 +5,7 @@ API Server for Main Agent - HTTP interface for agent interactions
 import os
 import time
 import logging
+import asyncio
 from typing import Optional
 from dotenv import load_dotenv
 
@@ -53,6 +54,7 @@ app = FastAPI(title="Main Agent API", version="1.0.0")
 
 # Global variables
 project_client: Optional[AIProjectClient] = None
+credential: Optional[ChainedTokenCredential] = None
 main_agent: Optional[MainAgent] = None
 tool_agent: Optional[ToolAgent] = None
 research_agent: Optional[ResearchAgent] = None
@@ -69,7 +71,7 @@ class AgentResponse(BaseModel):
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup agents on shutdown"""
-    global main_agent, tool_agent, research_agent
+    global main_agent, tool_agent, research_agent, project_client, credential
     
     logger.info("🛑 Shutting down agents...")
     
@@ -80,14 +82,18 @@ async def shutdown_event():
             logger.info("✅ Main Agent deleted")
         except Exception as e:
             logger.error(f"❌ Error deleting Main Agent: {e}")
+        finally:
+            main_agent = None
     
-    # Delete Tool Agent
+    # Delete Tool Agent (with MCP cleanup)
     if tool_agent:
         try:
             await tool_agent.delete()
             logger.info("✅ Tool Agent deleted")
         except Exception as e:
             logger.error(f"❌ Error deleting Tool Agent: {e}")
+        finally:
+            tool_agent = None
     
     # Delete Research Agent
     if research_agent:
@@ -96,14 +102,48 @@ async def shutdown_event():
             logger.info("✅ Research Agent deleted")
         except Exception as e:
             logger.error(f"❌ Error deleting Research Agent: {e}")
+        finally:
+            research_agent = None
     
-    logger.info("✅ All agents cleaned up")
+    # Close AIProjectClient to release connection resources
+    if project_client:
+        try:
+            # AIProjectClient may have a close() method depending on SDK version
+            if hasattr(project_client, 'close'):
+                if asyncio.iscoroutinefunction(project_client.close):
+                    await project_client.close()
+                else:
+                    project_client.close()
+                logger.info("✅ Project client closed")
+            else:
+                # If no close method, just clear reference
+                logger.info("🧹 Clearing project client reference...")
+            project_client = None
+        except Exception as e:
+            logger.error(f"❌ Error closing project client: {e}")
+    
+    # Close credential to release token cache and resources
+    if credential:
+        try:
+            if hasattr(credential, 'close'):
+                if asyncio.iscoroutinefunction(credential.close):
+                    await credential.close()
+                else:
+                    credential.close()
+                logger.info("✅ Credential closed")
+            else:
+                logger.info("🧹 Clearing credential reference...")
+            credential = None
+        except Exception as e:
+            logger.error(f"❌ Error closing credential: {e}")
+    
+    logger.info("✅ All agents and resources cleaned up")
 
 
 @app.on_event("startup")
 async def startup_event():
     """Initialize agents on startup"""
-    global project_client, main_agent, tool_agent, research_agent
+    global project_client, credential, main_agent, tool_agent, research_agent
     
     try:
         logger.info("🚀 Initializing Agent Service...")

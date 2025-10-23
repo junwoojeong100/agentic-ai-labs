@@ -302,26 +302,30 @@ class ToolAgent:
             logger.info(f"Initializing MCP client with URL: {mcp_endpoint}")
             self.mcp_client = MCPClient(mcp_endpoint)
             
-            self.instructions = """You are a specialized agent that uses external tools via MCP.
+            self.instructions = """You are a tool-calling agent with access to weather information.
 
-🔧 Available MCP Tools:
-- get_weather: Get current weather for a city (requires "location" parameter)
+TOOL: get_weather(location)
+- Returns current weather for any city
+- Parameter: "location" (city name in English)
 
-📋 How to use tools:
-1. Analyze the user's question
-2. If the question requires a tool (e.g., weather query), respond with ONLY this JSON format:
-   {"tool": "tool_name", "arguments": {"param": "value"}}
-3. If no tool is needed, respond naturally in the user's language
+RULES:
+1. ANY weather question → Return JSON: {"tool": "get_weather", "arguments": {"location": "CityName"}}
+2. Convert Korean city names to English (서울→Seoul, 부산→Busan, 제주→Jeju)
+3. Return ONLY JSON for weather questions (no other text)
+4. Non-weather questions → Answer normally
 
-✅ Examples:
-- User: "서울 날씨?" → {"tool": "get_weather", "arguments": {"location": "Seoul"}}
-- User: "What's the weather in Tokyo?" → {"tool": "get_weather", "arguments": {"location": "Tokyo"}}
-- User: "뉴욕과 런던의 날씨 알려줘" → {"tool": "get_weather", "arguments": {"location": "New York"}}
+EXAMPLES:
+Q: "서울 날씨"
+A: {"tool": "get_weather", "arguments": {"location": "Seoul"}}
 
-⚠️ Important:
-- For weather queries, ALWAYS use the tool (return JSON only)
-- Match the user's language (Korean/English)
-- Be precise with location names"""
+Q: "서울의 현재 날씨를 알려주세요. 온도와 체감온도, 날씨 상태, 습도, 바람 정보를 모두 포함해주세요."
+A: {"tool": "get_weather", "arguments": {"location": "Seoul"}}
+
+Q: "Tokyo weather"
+A: {"tool": "get_weather", "arguments": {"location": "Tokyo"}}
+
+Q: "안녕"
+A: 안녕하세요! 무엇을 도와드릴까요?"""
         else:
             self.instructions = "You are a helpful assistant. MCP tools are not available."
     
@@ -483,22 +487,63 @@ class ToolAgent:
                             
                             mcp_span.set_attribute("mcp.result", str(tool_result)[:500])
                         
-                        # Format result in Korean
+                        # Format result
                         if isinstance(tool_result, dict):
                             result_str = json.dumps(tool_result, ensure_ascii=False, indent=2)
                         else:
                             result_str = str(tool_result)
                         
-                        if tool_name == "get_weather":
-                            final_response = f"날씨 정보: {result_str}"
-                        else:
-                            final_response = result_str
+                        logger.info(f"[tool_result] Received: {result_str}")
                         
-                        span.set_attribute("tool.final_response_length", len(final_response))
+                        # ====================================================================
+                        # IMPORTANT: Send tool result back to LLM for proper formatting
+                        # ====================================================================
+                        # Ask LLM to present the actual data in a user-friendly way
+                        # ====================================================================
+                        
+                        format_prompt = f"""Tool '{tool_name}' returned the following result. Please present this ACTUAL data to the user in a clear, friendly format in Korean. DO NOT use placeholders:
+
+{result_str}
+
+Present the data clearly with all details."""
+                        
+                        with tracer.start_as_current_span("tool_agent.format_result") as format_span:
+                            format_span.set_attribute("gen_ai.system", "azure_ai_agent_framework")
+                            format_span.set_attribute("gen_ai.request.model", self.model_deployment_name)
+                            format_span.set_attribute("gen_ai.prompt", mask_content(format_prompt))
+                            
+                            # Run LLM again to format the result
+                            format_result = await self.agent.run(format_prompt, thread=thread)
+                            
+                            # Extract formatted response
+                            formatted_response = None
+                            
+                            if hasattr(format_result, 'messages') and format_result.messages:
+                                last_message = format_result.messages[-1]
+                                
+                                if hasattr(last_message, 'contents') and last_message.contents:
+                                    try:
+                                        first_content = last_message.contents[0]
+                                        if hasattr(first_content, 'text'):
+                                            formatted_response = first_content.text
+                                    except (IndexError, AttributeError, TypeError):
+                                        pass
+                                
+                                if not formatted_response and hasattr(last_message, 'text'):
+                                    formatted_response = last_message.text
+                            
+                            if not formatted_response:
+                                formatted_response = f"날씨 정보:\n{result_str}"
+                                logger.warning("Failed to format tool result, using raw data")
+                            
+                            format_span.set_attribute("gen_ai.completion", mask_content(formatted_response))
+                            format_span.set_attribute("gen_ai.response.length", len(formatted_response))
+                        
+                        span.set_attribute("tool.final_response_length", len(formatted_response))
                         span.set_attribute("tool.status", "success_with_tool_call")
                         
-                        logger.info(f"[result] {final_response}")
-                        return final_response
+                        logger.info(f"[formatted] {formatted_response[:200]}...")
+                        return formatted_response
                 
                 span.set_attribute("tool.status", "success_no_tool_call")
                 span.set_attribute("tool.response_length", len(response_text))

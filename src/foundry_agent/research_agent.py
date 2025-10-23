@@ -175,6 +175,7 @@ Use this agent whenever users ask about 여행지, 관광지, 추천, 명소, or
         Returns:
             Agent response
         """
+        thread = None
         try:
             # ========================================================================
             # 🔍 OpenTelemetry Span for Research Agent Execution Tracing
@@ -244,3 +245,11 @@ Use this agent whenever users ask about 여행지, 관광지, 추천, 명소, or
         except Exception as e:
             logger.error(f"Error running research agent: {e}")
             raise
+        finally:
+            # Clean up thread to prevent resource leaks
+            if thread:
+                try:
+                    self.project_client.agents.threads.delete(thread.id)
+                    logger.debug(f"Thread {thread.id} deleted")
+                except Exception as cleanup_error:
+                    logger.warning(f"Failed to delete thread {thread.id}: {cleanup_error}")
