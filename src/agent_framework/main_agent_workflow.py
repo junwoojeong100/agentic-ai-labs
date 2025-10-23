@@ -96,22 +96,16 @@ def _initialize_agents():
     # ========================================================================
     # 🔍 Step 1: Configure Azure Monitor for Observability (MUST BE FIRST!)
     # ========================================================================
-    # This must be called BEFORE creating any Azure AI clients
-    # to ensure all telemetry is properly captured
-    # ========================================================================
     try:
         app_insights_conn = os.getenv("APPLICATIONINSIGHTS_CONNECTION_STRING")
         if app_insights_conn:
             configure_azure_monitor()
-            logger.info("✅ Azure Monitor configured for observability")
-            
-            # Step 2: Instrument AI Inference for automatic LLM call tracing
             AIInferenceInstrumentor().instrument()
-            logger.info("✅ AI Inference instrumentation enabled")
+            logger.info("Azure Monitor configured with AI Inference instrumentation")
         else:
-            logger.warning("⚠️  APPLICATIONINSIGHTS_CONNECTION_STRING not set - Observability disabled")
+            logger.warning("APPLICATIONINSIGHTS_CONNECTION_STRING not set - Observability disabled")
     except Exception as e:
-        logger.warning(f"⚠️  Failed to configure observability: {e}")
+        logger.warning(f"Failed to configure observability: {e}")
     
     # Create agent client WITH logging enabled for tracing
     agent_client = create_agent_client()
@@ -166,7 +160,6 @@ def _initialize_agents():
     
     # Tool Agent - Create for MCP tool operations
     if os.getenv("MCP_ENDPOINT"):
-        logger.info("Creating Tool Agent...")
         tool_agent_instance = ToolAgent(
             project_endpoint=os.getenv("AZURE_AI_PROJECT_ENDPOINT"),
             mcp_endpoint=os.getenv("MCP_ENDPOINT")
@@ -176,10 +169,9 @@ def _initialize_agents():
     
     # Research Agent - Create for RAG operations  
     if os.getenv("SEARCH_ENDPOINT") and os.getenv("SEARCH_INDEX"):
-        logger.info("Creating Research Agent...")
         search_key = os.getenv("SEARCH_KEY")
         if not search_key:
-            logger.warning("⚠️  SEARCH_KEY not set - Research Agent will have limited functionality")
+            logger.warning("SEARCH_KEY not set - Research Agent will have limited functionality")
         
         research_agent_instance = ResearchAgent(
             project_endpoint=os.getenv("AZURE_AI_PROJECT_ENDPOINT"),
@@ -190,7 +182,7 @@ def _initialize_agents():
     else:
         logger.warning("SEARCH_ENDPOINT/SEARCH_INDEX not set - Research Agent disabled")
     
-    logger.info("✅ All agents initialized")
+    logger.info("All agents initialized")
 
 
 # ---- Workflow Executors (Nodes) ----
@@ -210,8 +202,6 @@ async def router_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> No
     with tracer.start_as_current_span("workflow.router") as span:
         span.set_attribute("router.input", mask_content(msg.text))
         span.set_attribute("workflow.stage", "routing")
-        
-        logger.info(f"🔀 Router: Analyzing query")
         
         try:
             text_lower = msg.text.lower()
@@ -253,7 +243,6 @@ async def router_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> No
             
             # Enhanced rule: If has both intentions with connecting words → orchestrator
             if has_tool and has_research and has_connector:
-                logger.info(f"🎯 Rule-based routing → ORCHESTRATOR (detected: tool + research + connector)")
                 span.set_attribute("router.method", "rule_based")
                 span.set_attribute("router.intent", "orchestrator")
                 span.set_attribute("router.reason", "multi_intent_with_connector")
@@ -262,7 +251,6 @@ async def router_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> No
             
             # If clearly only tool keywords (no research keywords)
             if has_tool and not has_research and len(msg.text.split()) < 15:
-                logger.info(f"🎯 Rule-based routing → TOOL (detected: pure tool request)")
                 span.set_attribute("router.method", "rule_based")
                 span.set_attribute("router.intent", "tool")
                 span.set_attribute("router.reason", "pure_tool_request")
@@ -276,7 +264,6 @@ async def router_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> No
             result = await router_agent.run(f"Route this query: {msg.text}", thread=router_thread)
             intent = str(result.text if hasattr(result, 'text') else result).strip().lower()
             
-            logger.info(f"📊 AI routing → {intent.upper()}")
             span.set_attribute("router.intent", intent)
             span.set_attribute("router.query_length", len(msg.text))
             
@@ -312,8 +299,6 @@ async def tool_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> None
         span.set_attribute("executor.type", "tool")
         span.set_attribute("executor.input", mask_content(msg.text))
         
-        logger.info(f"🔧 Tool Agent: Processing request")
-        
         try:
             if tool_agent_instance:
                 # Use pre-created agent instance
@@ -331,7 +316,7 @@ async def tool_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> None
                 await ctx.yield_output(f"⚠️ Tool Agent: MCP endpoint not configured")
         
         except Exception as e:
-            logger.error(f"❌ Tool node error: {e}")
+            logger.error(f"Tool node error: {e}")
             span.set_attribute("executor.status", "error")
             span.set_attribute("error.message", str(e))
             span.record_exception(e)
@@ -356,8 +341,6 @@ async def research_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> 
         span.set_attribute("executor.type", "research")
         span.set_attribute("executor.input", mask_content(msg.text))
         
-        logger.info(f"📚 Research Agent: Processing request")
-        
         try:
             if research_agent_instance:
                 # Use pre-created agent instance
@@ -375,7 +358,7 @@ async def research_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> 
                 await ctx.yield_output(f"⚠️ Research Agent: Search not configured")
         
         except Exception as e:
-            logger.error(f"❌ Research node error: {e}")
+            logger.error(f"Research node error: {e}")
             span.set_attribute("executor.status", "error")
             span.set_attribute("error.message", str(e))
             span.record_exception(e)
@@ -394,8 +377,6 @@ async def general_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> N
     with tracer.start_as_current_span("workflow.executor.general") as span:
         span.set_attribute("executor.type", "general")
         span.set_attribute("executor.input", mask_content(msg.text))
-        
-        logger.info(f"💬 General Agent: Processing request")
         
         try:
             # Create a new thread for this conversation (same as research_agent)
@@ -433,11 +414,10 @@ async def general_node(msg: UserMessage, ctx: WorkflowContext[UserMessage]) -> N
             
             span.set_attribute("executor.result_length", len(response_text))
             span.set_attribute("executor.status", "success")
-            logger.info(f"✅ General Agent response: {response_text[:100]}...")
             await ctx.yield_output(f"💬 {response_text}")
         
         except Exception as e:
-            logger.error(f"❌ General node error: {e}")
+            logger.error(f"General node error: {e}")
             span.set_attribute("executor.status", "error")
             span.set_attribute("error.message", str(e))
             span.record_exception(e)
@@ -458,8 +438,6 @@ async def orchestrator_node(msg: UserMessage, ctx: WorkflowContext[UserMessage])
         span.set_attribute("executor.type", "orchestrator")
         span.set_attribute("executor.input", mask_content(msg.text))
         span.set_attribute("orchestrator.parallel_execution", True)
-        
-        logger.info(f"🎯 Orchestrator: Processing complex request with multiple agents")
         
         try:
             mcp_endpoint = os.getenv("MCP_ENDPOINT")
@@ -499,8 +477,6 @@ async def orchestrator_node(msg: UserMessage, ctx: WorkflowContext[UserMessage])
                     return f"⚠️ Research Agent error: {str(e)}"
             
             # Run both agents in parallel with span tracking
-            logger.info("🔄 Running Tool and Research agents in parallel...")
-            
             with tracer.start_as_current_span("orchestrator.parallel_execution"):
                 tool_result, research_result = await asyncio.gather(
                     run_tool(),
@@ -520,11 +496,10 @@ async def orchestrator_node(msg: UserMessage, ctx: WorkflowContext[UserMessage])
             span.set_attribute("orchestrator.result_length", len(combined_output))
             span.set_attribute("orchestrator.status", "success")
             
-            logger.info("✅ Orchestrator: Combined results from both agents")
             await ctx.yield_output(combined_output)
         
         except Exception as e:
-            logger.error(f"❌ Orchestrator error: {e}")
+            logger.error(f"Orchestrator error: {e}")
             span.set_attribute("orchestrator.status", "error")
             span.set_attribute("error.message", str(e))
             span.record_exception(e)
@@ -547,32 +522,29 @@ workflow = (
 # ---- Cleanup Function ----
 async def cleanup_all_agents():
     """Clean up all agent instances."""
-    logger.info("🧽 Cleaning up all agents...")
+    logger.info("Cleaning up all agents...")
     
     # Cleanup Tool Agent
     if tool_agent_instance:
         try:
             await tool_agent_instance.cleanup()
-            logger.info("✅ Tool Agent cleaned up")
         except Exception as e:
-            logger.error(f"❌ Tool Agent cleanup error: {e}")
+            logger.error(f"Tool Agent cleanup error: {e}")
     
     # Cleanup Research Agent
     if research_agent_instance:
         try:
             await research_agent_instance.cleanup()
-            logger.info("✅ Research Agent cleaned up")
         except Exception as e:
-            logger.error(f"❌ Research Agent cleanup error: {e}")
+            logger.error(f"Research Agent cleanup error: {e}")
     
     # Cleanup agent_client (manages router_agent and general_agent)
     try:
         await agent_client.close()
-        logger.info("✅ Agent client closed (router_agent and general_agent cleaned up)")
     except Exception as e:
-        logger.error(f"❌ Agent client cleanup error: {e}")
+        logger.error(f"Agent client cleanup error: {e}")
     
-    logger.info("✅ All agents cleaned up")
+    logger.info("All agents cleaned up")
 
 
 # ---- Main Orchestrator Class ----
@@ -608,8 +580,6 @@ class MainAgentWorkflow:
             workflow_span.set_attribute("workflow.pattern", "executor_graph")
             workflow_span.set_attribute("user.message", mask_content(user_input))
             
-            logger.info(f"💬 User: {user_input}")
-            
             msg = UserMessage(text=user_input)
             outputs = []
             
@@ -625,7 +595,6 @@ class MainAgentWorkflow:
                     
                     # Only append non-None, non-empty outputs
                     if output is not None and str(output).strip():
-                        logger.info(f"📤 Output: {output}")
                         outputs.append(str(output))
                 
                 final_result = "\n".join(outputs) if outputs else "No response generated"
@@ -637,7 +606,7 @@ class MainAgentWorkflow:
                 return final_result
             
             except Exception as e:
-                logger.error(f"❌ Workflow error: {e}")
+                logger.error(f"Workflow error: {e}")
                 workflow_span.set_attribute("workflow.status", "error")
                 workflow_span.set_attribute("error.message", str(e))
                 workflow_span.record_exception(e)

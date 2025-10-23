@@ -68,7 +68,6 @@ class MCPClient:
                 if session_id:
                     self.session_id = session_id
                     headers['mcp-session-id'] = session_id
-                    logger.info(f"✅ MCP session initialized with ID: {session_id}")
                 
                 # Parse SSE response
                 content = response.text
@@ -76,7 +75,6 @@ class MCPClient:
                     if line.startswith('data: '):
                         data = json.loads(line[6:])
                         if 'result' in data:
-                            logger.info(f"✅ Initialize result: {data['result']}")
                             break
                 
                 # Send initialized notification
@@ -89,7 +87,6 @@ class MCPClient:
                 response = await client.post(self.mcp_endpoint, json=initialized_notification, headers=headers)
                 if response.status_code not in [200, 204]:
                     response.raise_for_status()
-                logger.info("✅ Sent initialized notification")
                 
                 # List available tools
                 tools_request = {
@@ -109,15 +106,13 @@ class MCPClient:
                         data = json.loads(line[6:])
                         if 'result' in data and 'tools' in data['result']:
                             self.available_tools = data['result']['tools']
-                            logger.info(f"✅ Discovered {len(self.available_tools)} MCP tools")
-                            for tool in self.available_tools:
-                                logger.info(f"   - {tool['name']}: {tool.get('description', 'No description')}")
+                            logger.info(f"Discovered {len(self.available_tools)} MCP tools")
                             return True
                 
                 return False
                 
         except Exception as e:
-            logger.error(f"❌ Failed to initialize MCP client: {e}")
+            logger.error(f"Failed to initialize MCP client: {e}")
             return False
     
     async def call_tool(self, tool_name: str, arguments: Dict[str, Any], max_retries: int = 3) -> Any:
@@ -139,14 +134,12 @@ class MCPClient:
             try:
                 # Session validation and reinitialization on retry
                 if attempt > 0 and not session_reinitialized:
-                    logger.warning(f"🔄 Reinitializing MCP session before retry {attempt + 1}/{max_retries}")
+                    logger.warning(f"Reinitializing MCP session before retry {attempt + 1}/{max_retries}")
                     reinit_success = await self.initialize()
                     if reinit_success:
-                        logger.info(f"✅ MCP session reinitialized successfully")
                         session_reinitialized = True
                     else:
-                        logger.error(f"❌ Failed to reinitialize MCP session")
-                        # Continue anyway to try with existing session
+                        logger.error(f"Failed to reinitialize MCP session")
                 
                 headers = {"Accept": "application/json, text/event-stream"}
                 
@@ -165,11 +158,6 @@ class MCPClient:
                         }
                     }
                     
-                    if attempt > 0:
-                        logger.info(f"🔁 Retry attempt {attempt + 1}/{max_retries} for tool: {tool_name}")
-                    else:
-                        logger.info(f"🔧 Calling MCP tool: {tool_name} with args: {arguments}")
-                    
                     response = await client.post(self.mcp_endpoint, json=call_request, headers=headers)
                     response.raise_for_status()
                     
@@ -183,19 +171,17 @@ class MCPClient:
                             if 'error' in data:
                                 error_msg = data['error'].get('message', 'Unknown error')
                                 error_code = data['error'].get('code', 0)
-                                logger.warning(f"⚠️  MCP error: {error_msg} (code: {error_code})")
+                                logger.warning(f"MCP error: {error_msg} (code: {error_code})")
                                 
                                 # Session-related errors should trigger reinitialization
                                 if 'session' in error_msg.lower() or error_code in [-32000, -32001]:
                                     if attempt < max_retries - 1:
-                                        logger.info(f"🔄 Session error detected, will reinitialize on next attempt")
                                         raise Exception(f"Session error: {error_msg}")
                                     else:
                                         raise Exception(f"MCP session error: {error_msg}")
                             
                             if 'result' in data:
                                 result = data['result']
-                                logger.info(f"✅ Tool result (attempt {attempt + 1}): {result}")
                                 
                                 # Extract content from MCP response format
                                 if isinstance(result, dict) and 'content' in result:
@@ -211,7 +197,7 @@ class MCPClient:
                     
             except (httpx.TimeoutException, httpx.ConnectError, httpx.ReadTimeout) as e:
                 last_error = e
-                logger.warning(f"⚠️  MCP call timeout/connection error (attempt {attempt + 1}/{max_retries}): {e}")
+                logger.warning(f"MCP call timeout/connection error (attempt {attempt + 1}/{max_retries}): {e}")
                 if attempt < max_retries - 1:
                     import asyncio
                     await asyncio.sleep(1 * (attempt + 1))  # Exponential backoff: 1s, 2s, 3s
@@ -221,13 +207,13 @@ class MCPClient:
                 last_error = e
                 # Check for session-related HTTP errors (400, 401, 403)
                 if e.response.status_code in [400, 401, 403]:
-                    logger.warning(f"⚠️  HTTP {e.response.status_code} error (attempt {attempt + 1}/{max_retries}): {e}")
+                    logger.warning(f"HTTP {e.response.status_code} error (attempt {attempt + 1}/{max_retries}): {e}")
                     if attempt < max_retries - 1:
                         import asyncio
                         await asyncio.sleep(1 * (attempt + 1))
                     continue
                 else:
-                    logger.error(f"❌ HTTP error calling tool {tool_name}: {e}")
+                    logger.error(f"HTTP error calling tool {tool_name}: {e}")
                     raise
                 
             except Exception as e:
@@ -236,23 +222,23 @@ class MCPClient:
                 
                 # Check if error is session-related
                 if 'session' in error_msg and attempt < max_retries - 1:
-                    logger.warning(f"⚠️  Session error (attempt {attempt + 1}/{max_retries}): {e}")
+                    logger.warning(f"Session error (attempt {attempt + 1}/{max_retries}): {e}")
                     import asyncio
                     await asyncio.sleep(1 * (attempt + 1))
                     continue
                 else:
-                    logger.error(f"❌ Failed to call tool {tool_name}: {e}")
+                    logger.error(f"Failed to call tool {tool_name}: {e}")
                     raise
         
         # All retries failed
-        logger.error(f"❌ All {max_retries} retry attempts failed for tool {tool_name}")
+        logger.error(f"All {max_retries} retry attempts failed for tool {tool_name}")
         raise Exception(f"MCP call failed after {max_retries} attempts: {last_error}")
     
     async def close(self):
         """Clean up MCP client resources."""
         # MCPClient uses httpx.AsyncClient which is created and closed in context managers
         # No persistent connections to clean up
-        logger.debug("MCPClient cleanup completed")
+        pass
 
 
 class ToolAgent:
@@ -344,10 +330,9 @@ A: 안녕하세요! 무엇을 도와드릴까요?"""
         
         # Initialize MCP client first
         if self.mcp_client:
-            logger.info("Initializing MCP client...")
             success = await self.mcp_client.initialize()
             if not success:
-                logger.error("❌ Failed to initialize MCP client")
+                logger.error("Failed to initialize MCP client")
                 raise Exception("MCP client initialization failed")
         
         # Create credential chain: Try Managed Identity first (for Container Apps), then Azure CLI (for local dev)
@@ -369,12 +354,10 @@ A: 안녕하세요! 무엇을 도와드릴까요?"""
             instructions=self.instructions
         )
         
-        logger.info(f"✅ Initialized {self.name}")
+        logger.info(f"{self.name} initialized")
     
     async def cleanup(self):
         """Clean up resources."""
-        logger.info(f"Cleaning up {self.name}")
-        
         if self.agent:
             self.agent = None
         
@@ -392,8 +375,6 @@ A: 안녕하세요! 무엇을 도와드릴까요?"""
         
         # Give time for connections to close properly
         await asyncio.sleep(0.1)
-        
-        logger.info(f"✅ Cleaned up {self.name}")
     
     async def run(self, message: str, thread=None) -> str:
         """
@@ -420,8 +401,6 @@ A: 안녕하세요! 무엇을 도와드릴까요?"""
             span.set_attribute("tool.mcp_endpoint", self.mcp_endpoint or "not_configured")
             
             try:
-                logger.info(f"Running {self.name} with message: {message[:100]}...")
-                
                 # Create thread if not provided (same as research_agent)
                 if thread is None:
                     thread = self.agent.get_new_thread()
@@ -466,8 +445,6 @@ A: 안녕하세요! 무엇을 도와드릴까요?"""
                     llm_span.set_attribute("gen_ai.completion", mask_content(response_text))
                     llm_span.set_attribute("gen_ai.response.length", len(response_text))
                 
-                logger.info(f"[llm] Response: {response_text[:200]}...")
-                
                 # Check if LLM wants to call a tool
                 if self.mcp_client:
                     tool_call = self._parse_tool_call(response_text)
@@ -475,8 +452,6 @@ A: 안녕하세요! 무엇을 도와드릴까요?"""
                     if tool_call:
                         tool_name = tool_call['tool']
                         arguments = tool_call['arguments']
-                        
-                        logger.info(f"[tool] Calling: {tool_name}")
                         
                         # Call the MCP tool with tracing
                         with tracer.start_as_current_span("tool_agent.mcp_call") as mcp_span:
@@ -493,12 +468,8 @@ A: 안녕하세요! 무엇을 도와드릴까요?"""
                         else:
                             result_str = str(tool_result)
                         
-                        logger.info(f"[tool_result] Received: {result_str}")
-                        
                         # ====================================================================
                         # IMPORTANT: Send tool result back to LLM for proper formatting
-                        # ====================================================================
-                        # Ask LLM to present the actual data in a user-friendly way
                         # ====================================================================
                         
                         format_prompt = f"""Tool '{tool_name}' returned the following result. Please present this ACTUAL data to the user in a clear, friendly format in Korean. DO NOT use placeholders:
@@ -542,7 +513,6 @@ Present the data clearly with all details."""
                         span.set_attribute("tool.final_response_length", len(formatted_response))
                         span.set_attribute("tool.status", "success_with_tool_call")
                         
-                        logger.info(f"[formatted] {formatted_response[:200]}...")
                         return formatted_response
                 
                 span.set_attribute("tool.status", "success_no_tool_call")

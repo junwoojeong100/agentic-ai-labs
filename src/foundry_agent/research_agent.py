@@ -48,35 +48,29 @@ class ResearchAgent:
             connection_id = search_connection.id
             logger.info(f"Found Azure AI Search connection: {connection_id}")
         except Exception as e:
-            logger.warning(f"Could not get default Azure AI Search connection: {e}")
+            logger.warning(f"No default Azure AI Search connection: {e}")
             # Fallback: try to find any Azure AI Search connection
             try:
                 connections = list(project_client.connections.list(connection_type=ConnectionType.AZURE_AI_SEARCH))
                 if connections:
                     connection_id = connections[0].id
-                    logger.info(f"Using first available Azure AI Search connection: {connection_id}")
-            except Exception as e2:
-                logger.warning(f"Could not list Azure AI Search connections: {e2}")
+                    logger.info(f"Using first available connection: {connection_id}")
+            except Exception:
+                pass
         
-        # If no connection found, we'll use direct endpoint/key (via environment variables in container)
+        # Configure AzureAISearchTool
         if connection_id:
-            # Use connection-based approach
             self.ai_search_tool = AzureAISearchTool(
                 index_connection_id=connection_id,
                 index_name=search_index,
                 top_k=5
             )
-            logger.info(f"Initialized AzureAISearchTool with connection ID: {connection_id}")
+            logger.info(f"AzureAISearchTool configured: {connection_id}")
         else:
-            # Use direct endpoint/key approach
-            # Note: AzureAISearchTool still requires a connection, so we'll need to create one
-            logger.warning("No Azure AI Search connection found - Research Agent will have limited functionality")
-            logger.info(f"Search endpoint: {search_endpoint}, Index: {search_index}")
-            # For now, set ai_search_tool to None - agent will be created without it
+            logger.warning("No Azure AI Search connection - Research Agent will have limited functionality")
             self.ai_search_tool = None
         
         self.name = "Research Agent"
-        # Get model deployment name from environment variable (default: gpt-5)
         self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
         self.instructions = f"""You are a specialized research agent with access to a travel destination knowledge base via Azure AI Search.
 
@@ -104,7 +98,7 @@ Always ground your responses in retrieved information and cite your sources (pla
     
     def create(self) -> str:
         """Create the agent in Azure AI Foundry."""
-        logger.info(f"Creating agent: {self.name}")
+        logger.info(f"Creating {self.name}")
         
         # Create agent with or without Azure AI Search tool
         if self.ai_search_tool:
@@ -115,7 +109,7 @@ Always ground your responses in retrieved information and cite your sources (pla
                 tools=self.ai_search_tool.definitions,
                 tool_resources=self.ai_search_tool.resources
             )
-            logger.info(f"✅ Created {self.name} with Azure AI Search tool")
+            logger.info(f"Created {self.name} with Azure AI Search tool")
         else:
             # Create agent without tools - will use general knowledge only
             logger.warning(f"Creating {self.name} without Azure AI Search tool")
@@ -124,19 +118,16 @@ Always ground your responses in retrieved information and cite your sources (pla
                 name=self.name,
                 instructions=self.instructions + "\n\nNote: Azure AI Search is not available. Use your general knowledge to answer questions."
             )
-            logger.info(f"✅ Created {self.name} (no tools)")
+            logger.info(f"Created {self.name} (no tools)")
         
         self.agent_id = agent.id
-        logger.info(f"Agent ID: {self.agent_id}")
         return self.agent_id
     
     def delete(self):
         """Delete the agent."""
         if self.agent_id:
-            logger.info(f"Deleting agent: {self.name} ({self.agent_id})")
             self.project_client.agents.delete_agent(self.agent_id)
             self.agent_id = None
-            logger.info(f"✅ Deleted {self.name}")
     
     def get_connected_tool(self):
         """Return this agent as a ConnectedAgentTool for use in Main Agent."""
@@ -192,7 +183,7 @@ Use this agent whenever users ask about 여행지, 관광지, 추천, 명소, or
                 span.set_attribute("agent.name", self.name)
                 span.set_attribute("agent.type", "research_agent")
                 
-                # Create thread (thread_id parameter not supported in current SDK)
+                # Create thread
                 thread = self.project_client.agents.threads.create()
                 span.set_attribute("thread.id", thread.id)
                 
@@ -214,23 +205,16 @@ Use this agent whenever users ask about 여행지, 관광지, 추천, 명소, or
                 # Get the response
                 messages = self.project_client.agents.messages.list(thread_id=thread.id)
                 
-                # Convert ItemPaged to list for easier debugging
                 messages_list = list(messages)
-                logger.info(f"Retrieved {len(messages_list)} messages from thread")
                 span.set_attribute("messages.count", len(messages_list))
                 
                 # Messages are returned in reverse chronological order (newest first)
                 for msg in messages_list:
-                    logger.info(f"Message role: {msg.role}, has content: {hasattr(msg, 'content')}")
                     if msg.role == "assistant":
-                        # Content is a list of content parts
                         if hasattr(msg, 'content') and msg.content:
-                            logger.info(f"Assistant message content parts: {len(msg.content)}")
                             for content_part in msg.content:
-                                # Each content part has a 'type' and type-specific data
                                 if hasattr(content_part, 'text'):
                                     response_text = content_part.text.value
-                                    logger.info(f"Found response: {response_text[:100]}...")
                                     
                                     # Log output to span for Tracing UI
                                     span.set_attribute("gen_ai.completion", response_text)
@@ -239,17 +223,16 @@ Use this agent whenever users ask about 여행지, 관광지, 추천, 명소, or
                                     
                                     return response_text
                 
-                logger.warning("No assistant response found in messages")
+                logger.warning("No assistant response found")
                 return "No response generated"
             
         except Exception as e:
-            logger.error(f"Error running research agent: {e}")
+            logger.error(f"Error: {e}")
             raise
         finally:
-            # Clean up thread to prevent resource leaks
+            # Clean up thread
             if thread:
                 try:
                     self.project_client.agents.threads.delete(thread.id)
-                    logger.debug(f"Thread {thread.id} deleted")
                 except Exception as cleanup_error:
-                    logger.warning(f"Failed to delete thread {thread.id}: {cleanup_error}")
+                    logger.warning(f"Thread cleanup failed: {cleanup_error}")

@@ -128,19 +128,14 @@ Always ground your responses in retrieved information and cite your sources (pla
         
         # Initialize Azure AI Search client if endpoint and key are provided
         if self.search_endpoint and self.search_index and self.search_key:
-            logger.info(f"Initializing Azure AI Search client...")
-            logger.info(f"   Endpoint: {self.search_endpoint}")
-            logger.info(f"   Index: {self.search_index}")
-            
             self.search_client = SearchClient(
                 endpoint=self.search_endpoint,
                 index_name=self.search_index,
                 credential=AzureKeyCredential(self.search_key)
             )
-            logger.info(f"✅ Azure AI Search client initialized")
+            logger.info(f"Azure AI Search client initialized - Endpoint: {self.search_endpoint}, Index: {self.search_index}")
         else:
-            logger.warning(f"⚠️  Azure AI Search not configured (missing endpoint/index/key)")
-            logger.warning(f"   Research Agent will use general knowledge only")
+            logger.warning(f"Azure AI Search not configured (missing endpoint/index/key) - using general knowledge only")
         
         # Create Azure AI Agent Client
         self.chat_client = AzureAIAgentClient(
@@ -155,16 +150,10 @@ Always ground your responses in retrieved information and cite your sources (pla
             instructions=self.instructions
         )
         
-        logger.info(f"✅ Initialized {self.name}")
-        if self.search_client:
-            logger.info(f"   RAG: Enabled with Azure AI Search")
-        else:
-            logger.info(f"   RAG: Disabled (general knowledge only)")
+        logger.info(f"{self.name} initialized - RAG: {'Enabled' if self.search_client else 'Disabled'}")
     
     async def cleanup(self):
         """Clean up resources."""
-        logger.info(f"Cleaning up {self.name}")
-        
         if self.agent:
             self.agent = None
         
@@ -182,8 +171,6 @@ Always ground your responses in retrieved information and cite your sources (pla
         
         # Give time for connections to close properly
         await asyncio.sleep(0.1)
-        
-        logger.info(f"✅ Cleaned up {self.name}")
     
     async def _search_knowledge_base(self, query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         """
@@ -201,8 +188,6 @@ Always ground your responses in retrieved information and cite your sources (pla
             return []
         
         try:
-            logger.info(f"🔍 Searching knowledge base: '{query}' (top {top_k})")
-            
             # Perform hybrid search (vector + keyword)
             results = await self.search_client.search(
                 search_text=query,
@@ -221,11 +206,10 @@ Always ground your responses in retrieved information and cite your sources (pla
                     "score": result.get("@search.score", 0.0)
                 })
             
-            logger.info(f"✅ Found {len(search_results)} results")
             return search_results
             
         except Exception as e:
-            logger.error(f"❌ Search failed: {e}")
+            logger.error(f"Search failed: {e}")
             return []
     
     def _format_search_results(self, results: List[Dict[str, Any]]) -> str:
@@ -309,8 +293,6 @@ Always ground your responses in retrieved information and cite your sources (pla
             span.set_attribute("research.index", self.search_index or "not_configured")
             
             try:
-                logger.info(f"Running {self.name} with message: {message[:100]}...")
-                
                 # If search is available, perform RAG
                 if self.search_client:
                     # Search knowledge base with tracing
@@ -334,7 +316,6 @@ User Question: {message}
 
 Please answer based on the search results above. IMPORTANT: You MUST cite documents using【N:0†source】format where N is the document number (e.g.,【1:0†source】,【2:0†source】). Place citations immediately after claims."""
                         
-                        logger.info(f"🔍 Enhanced prompt with {len(search_results)} search results")
                         span.set_attribute("research.mode", "rag")
                     else:
                         enhanced_message = f"""No relevant information found in knowledge base.
@@ -342,12 +323,12 @@ Please answer based on the search results above. IMPORTANT: You MUST cite docume
 User Question: {message}
 
 Please answer using your general knowledge and indicate that the information is not from the knowledge base."""
-                        logger.warning("⚠️  No search results found")
+                        logger.warning("No search results found")
                         span.set_attribute("research.mode", "general_no_results")
                 else:
                     # No search available - use original message
                     enhanced_message = message
-                    logger.warning("⚠️  Search not available - using general knowledge")
+                    logger.warning("Search not available - using general knowledge")
                     span.set_attribute("research.mode", "general_no_search")
                 
                 # Run the agent with enhanced message and tracing
@@ -397,7 +378,6 @@ Please answer using your general knowledge and indicate that the information is 
                 span.set_attribute("research.status", "success")
                 span.set_attribute("research.response_length", len(response_text))
                 
-                logger.info(f"✅ {self.name} response: {response_text[:100]}...")
                 return response_text
                 
             except Exception as e:

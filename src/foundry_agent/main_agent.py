@@ -54,7 +54,7 @@ Always choose the right agent(s) based on the user's question and provide well-s
     
     def create(self) -> str:
         """Create the agent in Azure AI Foundry with Connected Agents."""
-        logger.info(f"Creating agent: {self.name}")
+        logger.info(f"Creating {self.name}")
         
         # Collect tool definitions from connected agents
         tools_definitions = []
@@ -69,26 +69,23 @@ Always choose the right agent(s) based on the user's question and provide well-s
                 instructions=self.instructions,
                 tools=tools_definitions
             )
-            logger.info(f"✅ Created {self.name} with {len(self.connected_tools)} connected agents")
+            logger.info(f"Created {self.name} with {len(self.connected_tools)} connected agents")
         else:
             agent = self.project_client.agents.create_agent(
                 model=self.model,
                 name=self.name,
                 instructions=self.instructions
             )
-            logger.info(f"✅ Created {self.name} (no connected agents)")
+            logger.info(f"Created {self.name} (no connected agents)")
         
         self.agent_id = agent.id
-        logger.info(f"✅ Created {self.name}: {self.agent_id}")
         return self.agent_id
     
     def delete(self):
         """Delete the agent."""
         if self.agent_id:
-            logger.info(f"Deleting agent: {self.name} ({self.agent_id})")
             self.project_client.agents.delete_agent(self.agent_id)
             self.agent_id = None
-            logger.info(f"✅ Deleted {self.name}")
     
     def get_id(self) -> Optional[str]:
         """Get the agent ID."""
@@ -110,8 +107,6 @@ Always choose the right agent(s) based on the user's question and provide well-s
             # ========================================================================
             # 🔍 OpenTelemetry Span for Agent Execution Tracing
             # ========================================================================
-            # Wrap agent execution in a span to track each step in Tracing UI
-            # ========================================================================
             from opentelemetry import trace
             tracer = trace.get_tracer(__name__)
             
@@ -123,7 +118,7 @@ Always choose the right agent(s) based on the user's question and provide well-s
                 span.set_attribute("agent.id", self.agent_id)
                 span.set_attribute("agent.name", self.name)
                 
-                # Create thread (thread_id parameter not supported in current SDK)
+                # Create thread
                 thread = self.project_client.agents.threads.create()
                 span.set_attribute("thread.id", thread.id)
                 
@@ -145,23 +140,16 @@ Always choose the right agent(s) based on the user's question and provide well-s
                 # Get the response
                 messages = self.project_client.agents.messages.list(thread_id=thread.id)
             
-                # Convert ItemPaged to list for easier debugging
                 messages_list = list(messages)
-                logger.info(f"Retrieved {len(messages_list)} messages from thread")
                 span.set_attribute("messages.count", len(messages_list))
                 
                 # Messages are returned in reverse chronological order (newest first)
                 for msg in messages_list:
-                    logger.info(f"Message role: {msg.role}, has content: {hasattr(msg, 'content')}")
                     if msg.role == "assistant":
-                        # Content is a list of content parts
                         if hasattr(msg, 'content') and msg.content:
-                            logger.info(f"Assistant message content parts: {len(msg.content)}")
                             for content_part in msg.content:
-                                # Each content part has a 'type' and type-specific data
                                 if hasattr(content_part, 'text'):
                                     response_text = content_part.text.value
-                                    logger.info(f"Found response: {response_text[:100]}...")
                                     
                                     # Log output to span for Tracing UI (Gen AI conventions)
                                     span.set_attribute("gen_ai.completion", response_text)
@@ -170,17 +158,16 @@ Always choose the right agent(s) based on the user's question and provide well-s
                                     
                                     return response_text
                 
-                logger.warning("No assistant response found in messages")
+                logger.warning("No assistant response found")
                 return "No response generated"
             
         except Exception as e:
-            logger.error(f"Error running main agent: {e}")
+            logger.error(f"Error: {e}")
             raise
         finally:
-            # Clean up thread to prevent resource leaks
+            # Clean up thread
             if thread:
                 try:
                     self.project_client.agents.threads.delete(thread.id)
-                    logger.debug(f"Thread {thread.id} deleted")
                 except Exception as cleanup_error:
-                    logger.warning(f"Failed to delete thread {thread.id}: {cleanup_error}")
+                    logger.warning(f"Thread cleanup failed: {cleanup_error}")
