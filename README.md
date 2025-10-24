@@ -447,58 +447,58 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 
 ```text
 agentic-ai-labs/
-├── infra/                                  # Bicep 인프라 코드
-│   ├── main.bicep                          # 메인 Bicep 템플릿
-│   ├── main.parameters.json                # 파라미터 파일
-│   └── core/                               # 모듈화된 Bicep 리소스
-│       ├── ai/                             # AI Foundry, OpenAI
-│       ├── host/                           # Container Apps
-│       ├── search/                         # AI Search
-│       └── security/                       # Key Vault, RBAC
+├── infra/                                      # Bicep 인프라 코드
+│   ├── main.bicep                              # 메인 Bicep 템플릿
+│   ├── main.parameters.json                    # 파라미터 파일
+│   └── core/                                   # 모듈화된 Bicep 리소스
+│       ├── ai/                                 # AI Foundry, OpenAI
+│       ├── host/                               # Container Apps
+│       ├── search/                             # AI Search
+│       └── security/                           # Key Vault, RBAC
 │
-├── src/                                    # 소스 코드
-│   ├── foundry_agent/                      # Multi-Agent 구현 (Foundry Agent Service)
-│   │   ├── main_agent.py                   # Main Agent (오케스트레이터)
-│   │   ├── tool_agent.py                   # Tool Agent (MCP 연동)
-│   │   ├── research_agent.py               # Research Agent (RAG)
-│   │   ├── api_server.py                   # Agent API 서버
-│   │   ├── masking.py                      # PII 마스킹 유틸리티
+├── src/                                        # 소스 코드
+│   ├── foundry_agent/                          # Multi-Agent 구현 (Foundry Agent Service)
+│   │   ├── main_agent.py                       # Main Agent (오케스트레이터)
+│   │   ├── tool_agent.py                       # Tool Agent (MCP 연동)
+│   │   ├── research_agent.py                   # Research Agent (RAG)
+│   │   ├── api_server.py                       # Agent API 서버
+│   │   ├── masking.py                          # PII 마스킹 유틸리티
 │   │   ├── requirements.txt
 │   │   └── Dockerfile
-│   ├── agent_framework/                    # Agent Framework Workflow
-│   │   ├── main_agent_workflow.py          # Workflow Router & Orchestrator
-│   │   ├── tool_agent.py                   # Tool Executor (MCP)
-│   │   ├── research_agent.py               # Research Executor (RAG)
-│   │   ├── api_server.py                   # Workflow API 서버
-│   │   ├── test_workflow.py                # Workflow 테스트
-│   │   ├── masking.py                      # PII 마스킹 유틸리티
-│   │   ├── requirements.txt                # OpenTelemetry 패키지 포함
+│   ├── agent_framework/                        # Agent Framework Workflow
+│   │   ├── main_agent_workflow.py              # Workflow Router & Orchestrator
+│   │   ├── tool_agent.py                       # Tool Executor (MCP)
+│   │   ├── research_agent.py                   # Research Executor (RAG)
+│   │   ├── api_server.py                       # Workflow API 서버
+│   │   ├── test_workflow.py                    # Workflow 테스트
+│   │   ├── masking.py                          # PII 마스킹 유틸리티
+│   │   ├── requirements.txt                    # OpenTelemetry 패키지 포함
 │   │   └── Dockerfile
-│   └── mcp/                                # MCP 서버
-│       ├── server.py                       # FastMCP 도구 서버
+│   └── mcp/                                    # MCP 서버
+│       ├── server.py                           # FastMCP 도구 서버
 │       ├── requirements.txt
 │       └── Dockerfile
 │
-├── data/                                   # 지식 베이스
-│   └── knowledge-base.json                 # AI Search 인덱싱용 문서
+├── data/                                       # 지식 베이스
+│   └── knowledge-base.json                     # AI Search 인덱싱용 문서
 │
-├── scripts/                                # 유틸리티 스크립트
+├── scripts/                                    # 유틸리티 스크립트
 │   └── generate_knowledge_base.py
 │
-├── 01_deploy_azure_resources.ipynb        # Lab 1 노트북
-├── 02_setup_ai_search_rag.ipynb           # Lab 2 노트북
-├── 03_deploy_foundry_agent_without_maf.ipynb # Lab 3 노트북
-├── 04_deploy_foundry_agent_with_maf.ipynb # Lab 4 노트북
-├── 05_maf_workflow_patterns.ipynb         # Lab 5 노트북
-├── 06_evaluate_agents.ipynb               # Lab 6 노트북 (Agent 평가)
-├── azure.yaml                              # azd 설정
-├── config.json                             # 배포 설정 (자동 생성)
-├── evals/                                  # Evaluation 결과 (Lab 6)
-│   ├── eval-queries.json                   # 테스트 쿼리
-│   ├── eval-input.jsonl                    # Agent 실행 결과
-│   └── eval-output.json                    # 평가 점수
-├── OBSERVABILITY.md                        # 관찰성(Tracing/Analytics) 심화 가이드
-└── README.md                               # 이 파일
+├── 01_deploy_azure_resources.ipynb             # Lab 1 노트북
+├── 02_setup_ai_search_rag.ipynb                # Lab 2 노트북
+├── 03_deploy_foundry_agent_without_maf.ipynb   # Lab 3 노트북
+├── 04_deploy_foundry_agent_with_maf.ipynb      # Lab 4 노트북
+├── 05_maf_workflow_patterns.ipynb              # Lab 5 노트북
+├── 06_evaluate_agents.ipynb                    # Lab 6 노트북 (Agent 평가)
+├── azure.yaml                                  # azd 설정
+├── config.json                                 # 배포 설정 (자동 생성)
+├── evals/                                      # Evaluation 결과 (Lab 6)
+│   ├── eval-queries.json                       # 테스트 쿼리
+│   ├── eval-input.jsonl                        # Agent 실행 결과
+│   └── eval-output.json                        # 평가 점수
+├── OBSERVABILITY.md                            # 관찰성(Tracing/Analytics) 심화 가이드
+└── README.md                                   # 이 파일
 ```
 
 ### 인프라 파라미터
