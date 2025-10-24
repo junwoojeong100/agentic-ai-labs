@@ -478,7 +478,7 @@ az cognitiveservices account list-skus --location $LOCATION -o table
 
 ---
 
-### Lab 04: Agent Framework 배포 (`04_deploy_agent_framework.ipynb`)
+### Lab 04: Foundry Agent with MAF 배포 (`04_deploy_foundry_agent_with_maf.ipynb`)
 
 **사용자 계정 (👤):**
 - `Azure AI User` - Agent 생성 및 관리

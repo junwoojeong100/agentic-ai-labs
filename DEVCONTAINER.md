@@ -134,7 +134,7 @@ Dev Container 설정이 완료되었다면:
 1. `01_deploy_azure_resources.ipynb` 실행
 2. `02_setup_ai_search_rag.ipynb` 실행
 3. `03_deploy_foundry_agent.ipynb` 실행
-4. `04_deploy_agent_framework.ipynb` 실행
+4. `04_deploy_foundry_agent_with_maf.ipynb` 실행
 
 각 노트북의 지침을 따라 진행하세요!
 
