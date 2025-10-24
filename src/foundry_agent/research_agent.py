@@ -87,12 +87,25 @@ Search Configuration:
 - Top Results: 5
 
 When answering travel-related questions:
-1. Use the Azure AI Search tool to find relevant travel destinations in your knowledge base
-2. Cite specific sources from the search results (mention place names)
-3. Provide comprehensive, well-structured travel recommendations
-4. Include practical information like locations, best times to visit, activities
-5. Explain why each destination matches the user's request
-6. If information is not in the knowledge base, clearly state that
+1. First, I will search the knowledge base for relevant travel destinations
+2. Then provide you with search results labeled as [Document 1], [Document 2], etc.
+3. You MUST cite these documents in your answer using the format【N:0†source】where N is the document number
+4. Reference specific documents when making claims or providing information
+5. Provide comprehensive, well-structured travel recommendations
+6. Include practical information like locations, best times to visit, activities
+7. Explain why each destination matches the user's request
+8. If information is not in search results, state that clearly
+
+CITATION REQUIREMENTS:
+- Always cite documents using【N:0†source】format (e.g.,【1:0†source】,【2:0†source】)
+- Use this exact format with the special brackets【】
+- Place citations immediately after the relevant sentence or claim
+- Example: "제주도 우도는 아름다운 자연 경관을 자랑합니다【1:0†source】【2:0†source】."
+- The number N corresponds to the [Document N] in the search results
+
+IMPORTANT: Always start your response with one of these indicators:
+- "📚 [RAG-based Answer]" - if your answer is based on retrieved information from the knowledge base
+- "💭 [General Knowledge]" - if the information is not available in the knowledge base and you're using general knowledge
 
 Always ground your responses in retrieved information and cite your sources (place names and categories)."""
     

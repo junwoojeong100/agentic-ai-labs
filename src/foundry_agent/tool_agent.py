@@ -257,36 +257,32 @@ class ToolAgent:
             logger.info(f"Initializing direct MCP client with URL: {mcp_endpoint}")
             self.mcp_client = MCPClient(mcp_endpoint)
             
-            self.instructions = """CRITICAL: You MUST follow these rules exactly.
+            self.instructions = """You are a tool-calling agent with access to weather information.
 
-When user asks about weather:
-1. Return ONLY this JSON format (no other text, no explanation):
-{"tool": "get_weather", "arguments": {"location": "CityName"}}
+TOOL: get_weather(location)
+- Returns current weather for any city
+- Parameter: "location" (city name in English)
 
-2. City name conversion:
-- 서울 → Seoul
-- 부산 → Busan  
-- 제주 → Jeju
-- 인천 → Incheon
+RULES:
+1. ANY weather question → Return JSON: {"tool": "get_weather", "arguments": {"location": "CityName"}}
+2. Convert Korean city names to English (서울→Seoul, 부산→Busan, 제주→Jeju)
+3. Return ONLY JSON for weather questions (no other text)
+4. Non-weather questions → Answer normally
 
-3. EXAMPLES - Copy this format EXACTLY:
+EXAMPLES:
+Q: "서울 날씨"
+A: {"tool": "get_weather", "arguments": {"location": "Seoul"}}
 
-User: "서울 날씨"
-You: {"tool": "get_weather", "arguments": {"location": "Seoul"}}
+Q: "서울의 현재 날씨를 알려주세요. 온도와 체감온도, 날씨 상태, 습도, 바람 정보를 모두 포함해주세요."
+A: {"tool": "get_weather", "arguments": {"location": "Seoul"}}
 
-User: "서울의 현재 날씨를 알려주세요. 온도와 체감온도, 날씨 상태, 습도, 바람 정보를 모두 포함해주세요."
-You: {"tool": "get_weather", "arguments": {"location": "Seoul"}}
+Q: "Tokyo weather"
+A: {"tool": "get_weather", "arguments": {"location": "Tokyo"}}
 
-User: "Tokyo weather"
-You: {"tool": "get_weather", "arguments": {"location": "Tokyo"}}
-
-4. For non-weather questions, answer normally in Korean.
-
-REMEMBER: Weather questions = JSON ONLY. No text before or after the JSON."""
+Q: "안녕"
+A: 안녕하세요! 무엇을 도와드릴까요?"""
         else:
-            self.instructions = """You are a specialized agent that can use external tools.
-
-Note: MCP server is not yet deployed. Please inform the user that tools are not available."""
+            self.instructions = "You are a helpful assistant. MCP tools are not available."
     
     async def create(self) -> str:
         """Create the agent in Azure AI Foundry and initialize MCP client."""
@@ -347,9 +343,13 @@ Note: MCP server is not yet deployed. Please inform the user that tools are not 
             id=self.agent_id,
             name="tool_agent",
             description="""Use this agent for:
-- Weather queries (e.g., 'What's the weather in Seoul?')
+- Weather information queries (날씨, weather, 기온, 온도, temperature, etc.)
+- Current weather conditions for any city worldwide
+- Temperature, humidity, wind speed, and weather status
+- Real-time weather data via MCP (Model Context Protocol) tools
 
-This agent has access to MCP (Model Context Protocol) tools and can execute real-time operations."""
+This agent has access to external tools through MCP and can execute real-time operations.
+Use this agent whenever users ask about weather conditions in specific locations."""
         )
     
     def get_id(self) -> Optional[str]:
