@@ -180,8 +180,13 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 
 ### Lab 6: MAF Dev UI
 
+**필수 패키지:**
+- `agent-framework-devui>=1.0.0b251007` - Microsoft Agent Framework Dev UI 도구
+  - 워크플로우 시각화 및 디버깅을 위한 웹 기반 인터페이스
+  - `requirements.txt`에 정의되어 있으며 자동으로 설치됨
+
 **학습 내용:**
-- **Dev UI 서버 시작**: `maf dev` 명령으로 워크플로우 시각화 도구 실행
+- **Dev UI 서버 시작**: `agent_framework.devui.serve()` 함수로 워크플로우 시각화 도구 실행
 - **워크플로우 그래프**: 노드와 엣지를 그래프로 시각적 표현
 - **실시간 디버깅**: 각 노드의 실행 상태, 입출력 데이터 모니터링
 - **성능 분석**: 노드별 실행 시간, 토큰 사용량, 병목 지점 식별
@@ -512,7 +517,6 @@ agentic-ai-labs/
 ├── 07_evaluate_agents.ipynb                    # Lab 7 노트북 (Agent 평가)
 ├── azure.yaml                                  # azd 설정
 ├── evals/                                      # Evaluation 결과 (Lab 7)
-│   ├── eval-queries.json                       # 테스트 쿼리tion 결과 (Lab 6)
 │   ├── eval-queries.json                       # 테스트 쿼리
 │   ├── eval-input.jsonl                        # Agent 실행 결과
 │   └── eval-output.json                        # 평가 점수
