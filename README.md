@@ -130,7 +130,7 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 - **Research Agent**: RAG 기반 지식 검색
 
 **배포 컴포넌트:**
-1. **MCP Server**: Model Context Protocol 서버 (날씨, 계산 도구)
+1. **MCP Server**: Model Context Protocol 서버 (날씨 도구)
 2. **Agent Service**: Foundry Agent 기반 Multi-Agent 서비스
 3. **Container Apps**: 두 서비스를 Container Apps에 배포
 
