@@ -53,7 +53,7 @@ def main():
     if not eval_output_path.exists():
         print("❌ 평가 결과 파일이 없습니다.")
         print(f"   파일 경로: {eval_output_path.absolute()}")
-        print("\n   먼저 06_evaluate_agents.ipynb의 셀 5를 실행하세요.\n")
+        print("\n   먼저 07_evaluate_agents.ipynb의 셀 5를 실행하세요.\n")
         return
     
     with open(eval_output_path, "r", encoding="utf-8") as f:

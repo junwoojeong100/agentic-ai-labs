@@ -502,7 +502,17 @@ az cognitiveservices account list-skus --location $LOCATION -o table
 
 ---
 
-### Lab 06: Agent 평가 (`06_evaluate_agents.ipynb`)
+### Lab 06: MAF Dev UI (`06_maf_dev_ui.ipynb`)
+
+**요구사항:**
+- Microsoft Agent Framework 설치 (Lab 5와 동일)
+- 웹 브라우저 (Dev UI 접속용)
+- 포트 8000 사용 가능
+
+**선택사항:**
+- GitHub Codespaces 사용 시 자동 포트 포워딩
+
+### Lab 07: Agent 평가 (`07_evaluate_agents.ipynb`)
 
 **사용자 계정 (👤):**
 - `Azure AI User` - Evaluation 실행, 결과 저장

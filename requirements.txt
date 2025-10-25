@@ -31,6 +31,7 @@ opentelemetry-instrumentation-fastapi>=0.45b0
 
 # Agent Framework & MCP
 agent-framework>=1.0.0b251016
+agent-framework-devui>=1.0.0b251007
 mcp>=1.1.0
 
 # Microsoft Agent Framework (Official - MAF)

@@ -73,7 +73,8 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 3. **Lab 3**: Foundry Agent without MAF 배포 (`03_deploy_foundry_agent_without_maf.ipynb`)
 4. **Lab 4**: Foundry Agent with MAF 배포 (`04_deploy_foundry_agent_with_maf.ipynb`)
 5. **Lab 5**: MAF Workflow 패턴 (`05_maf_workflow_patterns.ipynb`)
-6. **Lab 6**: Agent 평가 (`06_evaluate_agents.ipynb`)
+6. **Lab 6**: MAF Dev UI (`06_maf_dev_ui.ipynb`)
+7. **Lab 7**: Agent 평가 (`07_evaluate_agents.ipynb`)
 
 > 💡 **Tip**: 각 Lab은 이전 Lab 완료를 전제로 합니다. 순서대로 진행하세요!
 
@@ -90,7 +91,8 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 | **3** | [03_deploy_foundry_agent_without_maf.ipynb](./03_deploy_foundry_agent_without_maf.ipynb) | Foundry Agent without MAF | **Foundry Agent Service** | **Connected Agent (Handoff)** | Main/Tool/Research Agent, MCP Server 배포 |
 | **4** | [04_deploy_foundry_agent_with_maf.ipynb](./04_deploy_foundry_agent_with_maf.ipynb) | Foundry Agent with MAF | **Foundry Agent Service** | **Workflow Pattern (Router+Executor)** | AI 기반 라우팅, 병렬 실행, 커스텀 OpenTelemetry |
 | **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF Workflow | Microsoft Agent Framework | WorkflowBuilder | 6가지 오케스트레이션 패턴 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
-| **6** | [06_evaluate_agents.ipynb](./06_evaluate_agents.ipynb) | Agent 평가 | - | Azure AI Evaluation SDK | 성능 메트릭, 품질 평가, 개선 방향 |
+| **6** | [06_maf_dev_ui.ipynb](./06_maf_dev_ui.ipynb) | MAF Dev UI | Microsoft Agent Framework | Dev UI 시각화 | 워크플로우 디버깅, 성능 분석, 실행 히스토리 |
+| **7** | [07_evaluate_agents.ipynb](./07_evaluate_agents.ipynb) | Agent 평가 | - | Azure AI Evaluation SDK | 성능 메트릭, 품질 평가, 개선 방향 |
 
 ### Lab 1: Azure 인프라 배포
 
@@ -176,7 +178,23 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 > - **Foundry Agent**: 개별 에이전트 (LLM 추론, 도구 호출)
 > - **MAF Workflow**: 에이전트 실행 흐름 제어 (오케스트레이션)
 
-### Lab 6: Agent 평가 및 품질 측정
+### Lab 6: MAF Dev UI
+
+**학습 내용:**
+- **Dev UI 서버 시작**: `maf dev` 명령으로 워크플로우 시각화 도구 실행
+- **워크플로우 그래프**: 노드와 엣지를 그래프로 시각적 표현
+- **실시간 디버깅**: 각 노드의 실행 상태, 입출력 데이터 모니터링
+- **성능 분석**: 노드별 실행 시간, 토큰 사용량, 병목 지점 식별
+- **실행 히스토리**: 이전 실행 결과 저장, 조회 및 비교
+
+**주요 기능:**
+- 🎯 워크플로우 시각화 (Sequential, Concurrent 패턴)
+- 🔍 실시간 노드 상태 모니터링
+- 📊 성능 메트릭 및 최적화 가이드
+
+> **💡 Tip**: Dev UI는 개발 환경에서만 사용하고, 프로덕션에서는 `enable_dev_ui=False`로 비활성화하세요.
+
+### Lab 7: Agent 평가 및 품질 측정
 
 **평가 프레임워크:**
 - **Azure AI Evaluation SDK**: 자동화된 품질 평가
@@ -490,10 +508,11 @@ agentic-ai-labs/
 ├── 03_deploy_foundry_agent_without_maf.ipynb   # Lab 3 노트북
 ├── 04_deploy_foundry_agent_with_maf.ipynb      # Lab 4 노트북
 ├── 05_maf_workflow_patterns.ipynb              # Lab 5 노트북
-├── 06_evaluate_agents.ipynb                    # Lab 6 노트북 (Agent 평가)
+├── 06_maf_dev_ui.ipynb                         # Lab 6 노트북 (MAF Dev UI)
+├── 07_evaluate_agents.ipynb                    # Lab 7 노트북 (Agent 평가)
 ├── azure.yaml                                  # azd 설정
-├── config.json                                 # 배포 설정 (자동 생성)
-├── evals/                                      # Evaluation 결과 (Lab 6)
+├── evals/                                      # Evaluation 결과 (Lab 7)
+│   ├── eval-queries.json                       # 테스트 쿼리tion 결과 (Lab 6)
 │   ├── eval-queries.json                       # 테스트 쿼리
 │   ├── eval-input.jsonl                        # Agent 실행 결과
 │   └── eval-output.json                        # 평가 점수
