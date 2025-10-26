@@ -55,7 +55,7 @@ Azure AI Foundry에서 Agent 시스템을 관찰하는 계층:
 
 | 구분 | Lab 3 | Lab 4 |
 |------|-------|-------|
-| **Notebook** | 03_deploy_foundry_agent_without_maf.ipynb | 04_deploy_foundry_agent_with_maf.ipynb |
+| **Notebook** | 03_deploy_foundry_agent.ipynb | 04_deploy_foundry_agent_with_maf.ipynb |
 | **Agent 기반** | ✅ Azure AI Foundry Agent Service | ✅ Azure AI Foundry Agent Service |
 | **워크플로우 패턴** | Connected Agent (Handoff) | Workflow Pattern (Router+Executor) |
 | **Monitoring** | ✅ Application Insights + OpenTelemetry | ✅ Application Insights + OpenTelemetry |
@@ -844,7 +844,7 @@ A: Application Insights는 5-10분의 데이터 지연이 있습니다. 충분�
 - [GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
 
 ### 관련 실습
-- [Lab 3: Foundry Agent without MAF 배포](./03_deploy_foundry_agent_without_maf.ipynb)
+- [Lab 3: Foundry Agent without MAF 배포](./03_deploy_foundry_agent.ipynb)
 - [Lab 4: Foundry Agent with MAF 배포](./04_deploy_foundry_agent_with_maf.ipynb)
 
 ### 추가 리소스

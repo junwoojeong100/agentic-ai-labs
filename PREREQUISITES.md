@@ -465,7 +465,7 @@ az cognitiveservices account list-skus --location $LOCATION -o table
 
 ---
 
-### Lab 03: Foundry Agent without MAF 배포 (`03_deploy_foundry_agent_without_maf.ipynb`)
+### Lab 03: Foundry Agent without MAF 배포 (`03_deploy_foundry_agent.ipynb`)
 
 **사용자 계정 (👤):**
 - `Azure AI User` - Agent 생성 및 관리

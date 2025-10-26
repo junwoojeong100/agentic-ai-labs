@@ -70,7 +70,7 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 
 1. **Lab 1**: Azure 리소스 배포 (`01_deploy_azure_resources.ipynb`)
 2. **Lab 2**: RAG 지식 베이스 구축 (`02_setup_ai_search_rag.ipynb`)
-3. **Lab 3**: Foundry Agent without MAF 배포 (`03_deploy_foundry_agent_without_maf.ipynb`)
+3. **Lab 3**: Foundry Agent without MAF 배포 (`03_deploy_foundry_agent.ipynb`)
 4. **Lab 4**: Foundry Agent with MAF 배포 (`04_deploy_foundry_agent_with_maf.ipynb`)
 5. **Lab 5**: MAF Workflow 패턴 (`05_maf_workflow_patterns.ipynb`)
 6. **Lab 6**: MAF Dev UI (`06_maf_dev_ui.ipynb`)
@@ -88,7 +88,7 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 |-----|--------|------|-----------|---------------|-----------|
 | **1** | [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb) | Azure 인프라 배포 | - | Bicep IaC | AI Foundry, OpenAI, AI Search, Container Apps 생성 |
 | **2** | [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb) | RAG 구축 | - | Azure AI Search SDK | 인덱스 생성, 50개 문서 임베딩 |
-| **3** | [03_deploy_foundry_agent_without_maf.ipynb](./03_deploy_foundry_agent_without_maf.ipynb) | Foundry Agent without MAF | **Foundry Agent Service** | **Connected Agent (Handoff)** | Main/Tool/Research Agent, MCP Server 배포 |
+| **3** | [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb) | Foundry Agent without MAF | **Foundry Agent Service** | **Connected Agent (Handoff)** | Main/Tool/Research Agent, MCP Server 배포 |
 | **4** | [04_deploy_foundry_agent_with_maf.ipynb](./04_deploy_foundry_agent_with_maf.ipynb) | Foundry Agent with MAF | **Foundry Agent Service** | **Workflow Pattern (Router+Executor)** | AI 기반 라우팅, 병렬 실행, 커스텀 OpenTelemetry |
 | **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF Workflow | Microsoft Agent Framework | WorkflowBuilder | 6가지 오케스트레이션 패턴 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
 | **6** | [06_maf_dev_ui.ipynb](./06_maf_dev_ui.ipynb) | MAF Dev UI | Microsoft Agent Framework | Dev UI 시각화 | 워크플로우 디버깅, 성능 분석, 실행 히스토리 |
@@ -510,11 +510,11 @@ agentic-ai-labs/
 │
 ├── 01_deploy_azure_resources.ipynb             # Lab 1 노트북
 ├── 02_setup_ai_search_rag.ipynb                # Lab 2 노트북
-├── 03_deploy_foundry_agent_without_maf.ipynb   # Lab 3 노트북
+├── 03_deploy_foundry_agent.ipynb               # Lab 3 노트북
 ├── 04_deploy_foundry_agent_with_maf.ipynb      # Lab 4 노트북
 ├── 05_maf_workflow_patterns.ipynb              # Lab 5 노트북
-├── 06_maf_dev_ui.ipynb                         # Lab 6 노트북 (MAF Dev UI)
-├── 07_evaluate_agents.ipynb                    # Lab 7 노트북 (Agent 평가)
+├── 06_maf_dev_ui.ipynb                         # Lab 6 노트북
+├── 07_evaluate_agents.ipynb                    # Lab 7 노트북
 ├── azure.yaml                                  # azd 설정
 ├── evals/                                      # Evaluation 결과 (Lab 7)
 │   ├── eval-queries.json                       # 테스트 쿼리
