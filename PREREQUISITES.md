@@ -509,11 +509,18 @@ az cognitiveservices account list-skus --location $LOCATION -o table
 - **agent-framework-devui>=1.0.0b251007** - Dev UI 패키지
   - `requirements.txt`를 통해 자동 설치됨
   - 워크플로우 시각화를 위한 웹 서버 제공
+  - FastAPI 기반 서버 (포트 8080)
 - 웹 브라우저 (Dev UI 접속용)
 - 포트 8080 사용 가능 (Dev UI 서버 기본 포트)
 
+**주요 기능:**
+- 워크플로우 그래프 시각화 (노드와 엣지)
+- 실시간 노드 상태 모니터링
+- 성능 메트릭 및 최적화 가이드
+- 실행 히스토리 저장 및 조회
+
 **선택사항:**
-- GitHub Codespaces 사용 시 자동 포트 포워딩
+- GitHub Codespaces 사용 시 자동 포트 포워딩 (host='0.0.0.0' 설정)
 
 ### Lab 07: Agent 평가 (`07_evaluate_agents.ipynb`)
 

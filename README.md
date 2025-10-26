@@ -119,10 +119,10 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 
 **인덱스 스키마:**
 - `id`, `title`, `content`: 문서 기본 정보
-- `category`, `section`, `subsection`: 계층적 분류
+- `category`, `section`: 계층적 분류
 - `contentVector`: 3072차원 벡터 (검색용)
 
-> **💡 Tip**: HNSW 알고리즘으로 빠른 벡터 검색, Semantic Ranker로 정확도 향상
+> **💡 Tip**: HNSW 알고리즘으로 빠른 벡터 검색, 하이브리드 검색으로 정확도 향상
 
 ### Lab 3: Multi-Agent 시스템 배포
 
