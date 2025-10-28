@@ -26,25 +26,50 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 ## 🎯 개요 (Overview)
 
-이 실습은 **GitHub Codespace** 환경에서 진행되도록 설계되었으며, 다음 Core Pillars를 다룹니다:
+이 실습은 **프로덕션 수준의 Multi-Agent 시스템 구축**을 위한 포괄적인 가이드입니다. **GitHub Codespace** 환경(로컬 환경도 지원)에서 진행되며, Azure AI Foundry를 중심으로 다음 4가지 핵심 영역을 다룹니다:
 
-| Pillar | 설명 | 핵심 요소 |
-|--------|------|-----------|
-| Multi-Agent Orchestration | Main / Tool / Research Agent 연결 및 라우팅 | Connected Agents, MCP, RAG | 
-| Retrieval-Augmented Generation | Azure AI Search 기반 지식 검색 결합 | Hybrid (Vector + BM25), Embeddings |
-| Tool & Protocol Integration | MCP(Model Context Protocol) 도구 호출 | FastMCP, External Utilities |
-| Observability & Tracing | Prompt/Completion 포함 실행 추적 | OpenTelemetry, Application Insights |
+| 핵심 영역 | 설명 | 구현 기술 | 학습 Lab |
+|---------|------|----------|----------|
+| **Multi-Agent Orchestration** | 여러 전문화된 Agent의 협업 및 라우팅 | Foundry Agent Service, Microsoft Agent Framework (MAF), Connected Agent, Workflow Pattern | Lab 3-5 | 
+| **Retrieval-Augmented Generation** | 지식 베이스 기반 정확한 답변 생성 | Azure AI Search, Hybrid Search (Vector + BM25), text-embedding-3-large | Lab 2 |
+| **Tool & Protocol Integration** | 외부 도구 및 API 연동을 통한 실시간 정보 활용 | MCP (Model Context Protocol), FastMCP, Container Apps | Lab 3-4 |
+| **Observability & Tracing** | Agent 실행 추적, 성능 모니터링, 품질 평가 | OpenTelemetry, Application Insights, Azure AI Evaluation | Lab 3-4, 7 |
 
 > **💡 실습 환경**  
-> GitHub Codespace에 최적화되어 사전 도구(Azure CLI, azd, Python, Docker)가 준비되어 별도 설치가 최소화됩니다.
+> - **GitHub Codespace (권장)**: Azure CLI, azd, Python, Docker 등 사전 설치되어 즉시 시작 가능
+> - **로컬 환경 (VS Code)**: macOS, Linux, Windows 모두 지원 - VS Code에서 Jupyter 노트북 실행 (상세 가이드는 [PREREQUISITES.md](./PREREQUISITES.md) 참조)
 
 **학습 후 할 수 있는 것 (Learning Outcomes)**
-- Azure AI Foundry Project 기반 Multi-Agent 시스템 아키텍처 이해 및 배포
-- RAG + MCP + Orchestration 결합 패턴 구현
-- Application Analytics vs Tracing 차이와 활용 전략 수립
-- Prompt/Completion(Content Recording) 포함 추적 및 운영 시 마스킹/샘플링 고려 적용
 
-**요약 TL;DR**: "이 레포는 RAG + MCP + Multi-Agent + Observability(Tracing + Analytics)를 한 번에 실습하는 통합 패턴 모음입니다."
+이 실습을 완료하면 다음을 **직접 구현하고 운영**할 수 있습니다:
+
+1. **🏗️ 시스템 설계 및 배포**
+   - Azure AI Foundry 기반 Multi-Agent 시스템 아키텍처 설계
+   - Bicep IaC를 활용한 프로덕션 인프라 자동화 배포
+   - Container Apps 기반 확장 가능한 Agent 서비스 구축
+
+2. **🤖 Agent 개발 및 오케스트레이션**
+   - 전문화된 Agent(Tool, Research, Main) 개발 및 연동
+   - Connected Agent Pattern과 Workflow Pattern 활용한 복잡한 워크플로우 구현
+   - Microsoft Agent Framework (MAF)로 6가지 오케스트레이션 패턴(Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) 적용
+
+3. **🔍 RAG 및 도구 통합**
+   - Azure AI Search 기반 하이브리드 검색(벡터 + 키워드) RAG 구축
+   - MCP(Model Context Protocol)를 통한 외부 도구/API 연동
+   - 자동 Citation 기능으로 답변 신뢰도 향상
+
+4. **📊 관찰성 및 품질 관리**
+   - OpenTelemetry 기반 분산 추적(Tracing) 구현
+   - Application Insights로 운영 메트릭 모니터링
+   - Azure AI Evaluation SDK를 활용한 자동화된 품질 평가
+   - Content Recording 운영 전략 수립(PII 마스킹, 샘플링)
+
+5. **🎯 프로덕션 운영 역량**
+   - Monitoring vs Tracing 차이 이해 및 적절한 활용
+   - MAF Dev UI로 워크플로우 디버깅 및 성능 최적화
+   - 모델 변경, 리소스 관리, 비용 최적화 전략 수립
+
+**💡 한 줄 요약**: "RAG + MCP + Multi-Agent + Observability를 모두 포함한 **프로덕션 레디 AI Agent 시스템**을 처음부터 끝까지 직접 구축하는 실전 가이드"
 
 ---
 
@@ -82,17 +107,24 @@ Codespace가 준비되면 Jupyter 노트북을 순서대로 실행하세요:
 
 ## 📓 Lab 안내
 
-실습은 6개의 Jupyter 노트북으로 구성되어 있습니다:
+실습은 **7개의 Jupyter 노트북**으로 구성되어 있으며, 순차적으로 진행하는 것을 권장합니다:
 
-| Lab | 노트북 | 목표 | Agent 기반 | 워크플로우 패턴 | 주요 내용 |
-|-----|--------|------|-----------|---------------|-----------|
-| **1** | [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb) | Azure 인프라 배포 | - | Bicep IaC | AI Foundry, OpenAI, AI Search, Container Apps 생성 |
-| **2** | [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb) | RAG 구축 | - | Azure AI Search SDK | 인덱스 생성, 50개 문서 임베딩 |
-| **3** | [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb) | Foundry Agent without MAF | **Foundry Agent Service** | **Connected Agent (Handoff)** | Main/Tool/Research Agent, MCP Server 배포 |
-| **4** | [04_deploy_foundry_agent_with_maf.ipynb](./04_deploy_foundry_agent_with_maf.ipynb) | Foundry Agent with MAF | **Foundry Agent Service** | **Workflow Pattern (Router+Executor)** | AI 기반 라우팅, 병렬 실행, 커스텀 OpenTelemetry |
-| **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF Workflow | Microsoft Agent Framework | WorkflowBuilder | 6가지 오케스트레이션 패턴 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
-| **6** | [06_maf_dev_ui.ipynb](./06_maf_dev_ui.ipynb) | MAF Dev UI | Microsoft Agent Framework | Dev UI 시각화 | 워크플로우 디버깅, 성능 분석, 실행 히스토리 |
-| **7** | [07_evaluate_agents.ipynb](./07_evaluate_agents.ipynb) | Agent 평가 | - | Azure AI Evaluation SDK | 성능 메트릭, 품질 평가, 개선 방향 |
+| Lab | 노트북 | 목표 | 난이도 | 소요시간 | 주요 내용 |
+|-----|--------|------|--------|----------|-----------|
+| **1** | [01_deploy_azure_resources.ipynb](./01_deploy_azure_resources.ipynb) | Azure 인프라 배포 | 🟢 초급 | 10-15분 | `azd provision`으로 AI Foundry, OpenAI, AI Search, Container Apps Environment 생성 |
+| **2** | [02_setup_ai_search_rag.ipynb](./02_setup_ai_search_rag.ipynb) | RAG 지식 베이스 구축 | 🟢 초급 | 15-20분 | 인덱스 생성, 50개 문서 임베딩, 하이브리드 검색 테스트 |
+| **3** | [03_deploy_foundry_agent.ipynb](./03_deploy_foundry_agent.ipynb) | Multi-Agent 시스템 배포 | 🟡 중급 | 20-30분 | **Connected Agent Pattern**: Main/Tool/Research Agent + MCP Server Container Apps 배포 |
+| **4** | [04_deploy_foundry_agent_with_maf.ipynb](./04_deploy_foundry_agent_with_maf.ipynb) | Workflow Pattern 배포 | 🟡 중급 | 25-35분 | **Workflow Pattern**: Router+Executor, 병렬 실행, 커스텀 OpenTelemetry 구현 |
+| **5** | [05_maf_workflow_patterns.ipynb](./05_maf_workflow_patterns.ipynb) | MAF 오케스트레이션 패턴 | 🔴 고급 | 40-60분 | 6가지 패턴 실습 (Sequential, Concurrent, Conditional, Loop, Error Handling, Handoff) |
+| **6** | [06_maf_dev_ui.ipynb](./06_maf_dev_ui.ipynb) | MAF Dev UI | 🟢 초급 | 10-15분 | 워크플로우 시각화, 디버깅, 성능 분석 도구 활용 |
+| **7** | [07_evaluate_agents.ipynb](./07_evaluate_agents.ipynb) | Agent 품질 평가 | 🟡 중급 | 20-30분 | Azure AI Evaluation SDK로 Groundedness, Relevance, Coherence 평가 |
+
+**💡 난이도 기준**:
+- 🟢 **초급**: 코드 실행 위주, 개념 이해 중심
+- 🟡 **중급**: 아키텍처 이해 필요, 일부 커스터마이징 가능
+- 🔴 **고급**: 심화 개념, 다양한 패턴 조합, 실전 적용 능력 필요
+
+**⏱️ 총 예상 소요시간**: 약 2.5 - 3.5시간 (처음 진행 시)
 
 ### Lab 1: Azure 인프라 배포
 
