@@ -56,9 +56,9 @@ class ResearchAgent:
             if not self.model_deployment_name:
                 logger.warning(
                     "AZURE_AI_MODEL_DEPLOYMENT_NAME not set. "
-                    "Using 'gpt-5' as fallback."
+                    "Using 'gpt-4o' as fallback."
                 )
-                self.model_deployment_name = "gpt-5"
+                self.model_deployment_name = "gpt-4o"
         
         self.search_endpoint = search_endpoint
         self.search_index = search_index

@@ -29,8 +29,8 @@ class MainAgent:
         self.agent_id: Optional[str] = None
         self.connected_tools = connected_tools or []
         
-        # Get model deployment name from environment variable (default: gpt-5)
-        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
+        # Get model deployment name from environment variable (default: gpt-4o)
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
         
         instructions = """You are the main agent that coordinates between specialized agents.
 
@@ -99,13 +99,12 @@ Always choose the right agent(s) based on the user's question and provide well-s
         """Get the agent ID."""
         return self.agent_id
 
-    async def run(self, message: str, thread_id: Optional[str] = None) -> str:
+    async def run(self, message: str) -> str:
         """
         Run the main orchestrator agent with a message.
         
         Args:
             message: User message
-            thread_id: Optional thread ID for conversation continuity
             
         Returns:
             Agent response

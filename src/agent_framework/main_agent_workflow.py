@@ -57,11 +57,10 @@ def create_agent_client() -> AzureAIAgentClient:
     if not model_deployment:
         logger.warning(
             "AZURE_AI_MODEL_DEPLOYMENT_NAME not set. "
-            "Please set it in .env file. Using 'gpt-5' as fallback."
+            "Please set it in .env file. Using 'gpt-4o' as fallback."
         )
-        model_deployment = "gpt-5"
+        model_deployment = "gpt-4o"    # Use ChainedTokenCredential to support both local dev and Container Apps
     
-    # Use ChainedTokenCredential to support both local dev and Container Apps
     # 1. Try Managed Identity (for Container Apps deployment)
     # 2. Fall back to Azure CLI (for local development)
     credential = ChainedTokenCredential(
@@ -440,13 +439,6 @@ async def orchestrator_node(msg: UserMessage, ctx: WorkflowContext[UserMessage])
         span.set_attribute("orchestrator.parallel_execution", True)
         
         try:
-            mcp_endpoint = os.getenv("MCP_ENDPOINT")
-            search_endpoint = os.getenv("SEARCH_ENDPOINT")
-            search_index = os.getenv("SEARCH_INDEX")
-            project_endpoint = os.getenv("AZURE_AI_PROJECT_ENDPOINT")
-            
-            results = []
-            
             # Execute tool and research agents in parallel
             async def run_tool():
                 if not tool_agent_instance:

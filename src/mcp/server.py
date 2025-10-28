@@ -23,10 +23,7 @@ Tools provided:
 from __future__ import annotations
 
 import os
-import random
-from datetime import datetime
-from typing import Any, Dict, Optional
-import asyncio
+from typing import Any, Dict
 
 import httpx
 from mcp.server.fastmcp import FastMCP

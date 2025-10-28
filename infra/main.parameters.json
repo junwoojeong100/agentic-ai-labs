@@ -12,7 +12,7 @@
       "value": "${AZURE_PRINCIPAL_ID=}"
     },
     "openAiModelName": {
-      "value": "${openAiModelName=gpt-5}"
+      "value": "${openAiModelName=gpt-4o}"
     },
     "openAiModelVersion": {
       "value": "${openAiModelVersion=2025-08-07}"

@@ -249,8 +249,8 @@ class ToolAgent:
         self.mcp_client: Optional[MCPClient] = None
         
         self.name = "Tool Agent"
-        # Get model deployment name from environment variable (default: gpt-5)
-        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
+        # Get model deployment name from environment variable (default: gpt-4o)
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
         
         # Create direct MCP client if endpoint is provided
         if mcp_endpoint:
@@ -356,13 +356,12 @@ Use this agent whenever users ask about weather conditions in specific locations
         """Get the agent ID."""
         return self.agent_id
     
-    async def run(self, user_query: str, thread_name: Optional[str] = None) -> str:
+    async def run(self, user_query: str) -> str:
         """
         Run agent to execute user query.
         
         Args:
             user_query: User's input query
-            thread_name: Optional thread name for conversation context
             
         Returns:
             Agent's response

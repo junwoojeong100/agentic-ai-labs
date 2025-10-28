@@ -71,7 +71,7 @@ class ResearchAgent:
             self.ai_search_tool = None
         
         self.name = "Research Agent"
-        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
+        self.model = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
         self.instructions = f"""You are a specialized research agent with access to a travel destination knowledge base via Azure AI Search.
 
 Your knowledge base contains information about Korean travel destinations including:

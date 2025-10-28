@@ -3,7 +3,6 @@ API Server for Main Agent - HTTP interface for agent interactions
 """
 
 import os
-import time
 import logging
 import asyncio
 from typing import Optional
@@ -294,7 +293,7 @@ async def chat_with_main_agent(request: AgentRequest):
             # Log input/output using Gen AI semantic conventions
             span.set_attribute("gen_ai.prompt", mask_text(request.message))
             span.set_attribute("gen_ai.system", "azure_ai_agent")
-            model_name = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-5")
+            model_name = os.getenv("AZURE_AI_MODEL_DEPLOYMENT_NAME", "gpt-4o")
             span.set_attribute("gen_ai.request.model", model_name)
             
             logger.info(f"Request: {request.message[:100]}...")
