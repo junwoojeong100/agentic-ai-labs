@@ -55,11 +55,11 @@
   
   "portsAttributes": {
     "8000": {
-      "label": "Agent API",
+      "label": "Agent/MCP API Server",
       "onAutoForward": "notify"
     },
     "8080": {
-      "label": "MCP Server",
+      "label": "MAF Dev UI",
       "onAutoForward": "notify"
     }
   },

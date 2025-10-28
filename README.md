@@ -30,10 +30,10 @@ Azure AI Foundry Agent Service를 활용한 Multi-Agent 시스템 구축 실습 
 
 | 핵심 영역 | 설명 | 구현 기술 | 학습 Lab |
 |---------|------|----------|----------|
-| **Multi-Agent Orchestration** | 여러 전문화된 Agent의 협업 및 라우팅 | Foundry Agent Service, Microsoft Agent Framework (MAF), Connected Agent, Workflow Pattern | Lab 3-5 | 
+| **Multi-Agent Orchestration** | 여러 전문화된 Agent의 협업 및 라우팅 | Foundry Agent Service, Microsoft Agent Framework (MAF), Connected Agent, Workflow Pattern | Lab 3-6 | 
 | **Retrieval-Augmented Generation** | 지식 베이스 기반 정확한 답변 생성 | Azure AI Search, Hybrid Search (Vector + BM25), text-embedding-3-large | Lab 2 |
 | **Tool & Protocol Integration** | 외부 도구 및 API 연동을 통한 실시간 정보 활용 | MCP (Model Context Protocol), FastMCP, Container Apps | Lab 3-4 |
-| **Observability & Tracing** | Agent 실행 추적, 성능 모니터링, 품질 평가 | OpenTelemetry, Application Insights, Azure AI Evaluation | Lab 3-4, 7 |
+| **Observability & Tracing** | Agent 실행 추적, 성능 모니터링, 품질 평가 | OpenTelemetry, Application Insights, Azure AI Evaluation | Lab 3-4, 6-7 |
 
 > **💡 실습 환경**  
 > - **GitHub Codespace (권장)**: Azure CLI, azd, Python, Docker 등 사전 설치되어 즉시 시작 가능

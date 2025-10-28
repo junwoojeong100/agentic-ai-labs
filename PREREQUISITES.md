@@ -14,9 +14,11 @@
 
 ## 실습 환경 선택
 
-### 권장: GitHub Codespace ⭐
+이 실습은 **Dev Container** 기반으로 설계되어 일관된 개발 환경을 제공합니다.
 
-이 실습은 **GitHub Codespace**에서 진행하도록 설계되었습니다.
+### 옵션 1: GitHub Codespace ⭐ (권장)
+
+**클라우드 기반 개발 환경 - 설치 없이 바로 시작!**
 
 **Codespace 사용 장점:**
 - ✅ 사전 구성된 개발 환경 (도구 자동 설치)
@@ -31,7 +33,45 @@
 
 ---
 
-## GitHub Codespace 환경
+### 옵션 2: 로컬 VS Code + Dev Container
+
+**로컬에서 동일한 환경 사용 - Docker만 설치하면 됩니다!**
+
+**필요한 것:**
+- ✅ Docker Desktop 설치
+- ✅ Visual Studio Code 설치
+- ✅ VS Code "Dev Containers" 확장 설치
+
+**시작 방법:**
+1. Docker Desktop 실행
+2. VS Code에서 이 리포지토리 열기
+3. 왼쪽 하단 `><` 아이콘 클릭
+4. "Reopen in Container" 선택
+5. 자동으로 모든 도구와 패키지가 설치됩니다! (5-10분 소요)
+
+> **💡 Dev Container란?**  
+> `.devcontainer/devcontainer.json` 설정을 기반으로 Docker 컨테이너 안에서 개발 환경을 자동으로 구성합니다.  
+> GitHub Codespaces와 **완전히 동일한 환경**이 로컬에서 실행됩니다!
+
+**상세 가이드:** [DEVCONTAINER.md](./DEVCONTAINER.md) 참조
+
+---
+
+### 옵션 3: 로컬 환경 (Dev Container 없이)
+
+**Dev Container를 사용하지 않는 경우 - 수동 설정이 필요합니다.**
+
+> ⚠️ **권장하지 않음**: OS별 설정 차이, 방화벽, 네트워크 정책 등으로 인한 문제가 발생할 수 있습니다.  
+> **옵션 1 (Codespace) 또는 옵션 2 (로컬 Dev Container) 사용을 강력히 권장합니다.**
+
+이 옵션은 [로컬 환경 설정](#로컬-환경-설정) 섹션을 참조하세요.
+
+---
+
+## Dev Container 자동 구성 환경
+
+> 💡 **GitHub Codespaces 또는 로컬 VS Code + Dev Container를 사용하는 경우**  
+> 아래 모든 도구와 패키지가 `.devcontainer/devcontainer.json` 설정에 따라 **자동으로 설치**됩니다.
 
 ### 자동 설치되는 도구
 
@@ -125,7 +165,7 @@ ipykernel>=6.29.0
 
 ### Codespace 리소스
 
-**기본 제공 리소스:**
+**기본 제공 리소스 (GitHub Codespaces):**
 - CPU: 2-4 cores
 - RAM: 8-16 GB
 - Storage: 32 GB
@@ -134,13 +174,20 @@ ipykernel>=6.29.0
 - 월 120 코어 시간
 - 월 15 GB 스토리지
 
+**로컬 Dev Container:**
+- 로컬 머신의 Docker Desktop 리소스 사용
+- 설정에서 CPU/메모리 할당량 조정 가능
+
 ---
 
-## 로컬 환경 설정
+## 로컬 환경 설정 (Dev Container 없이)
 
-로컬에서 실습을 진행하려면 다음을 수동으로 설치해야 합니다.
+> ⚠️ **이 섹션은 Dev Container를 사용하지 않는 경우에만 해당됩니다.**  
+> **GitHub Codespaces** 또는 **로컬 VS Code + Dev Container**를 사용하는 경우 이 섹션을 건너뛰세요.
 
-> ⚠️ **경고**: 로컬 환경에서는 OS별 설정 차이, 방화벽, 네트워크 정책 등으로 인한 문제가 발생할 수 있습니다. **GitHub Codespace 사용을 강력히 권장합니다.**
+로컬에서 Dev Container 없이 실습을 진행하려면 다음을 수동으로 설치해야 합니다.
+
+> ⚠️ **경고**: 로컬 환경에서는 OS별 설정 차이, 방화벽, 네트워크 정책 등으로 인한 문제가 발생할 수 있습니다. **GitHub Codespace 또는 로컬 Dev Container 사용을 강력히 권장합니다.**
 
 ### 필수 도구 설치
 
