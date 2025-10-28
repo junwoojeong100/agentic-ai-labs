@@ -646,22 +646,6 @@ Monitoring과 Tracing의 차이, 설정 방법, 운영 전략 등 모든 내용�
 
 ---
 
-## 🧹 리소스 정리 (Cleanup)
-
-실습 완료 후 비용 절감을 위해 리소스를 정리하세요:
-
-```bash
-# config.json에서 리소스 그룹 이름 확인
-cat config.json | grep resource_group
-
-# 리소스 그룹 전체 삭제 (권장)
-az group delete --name <resource-group-name> --yes --no-wait
-```
-
-> ⚠️ 리소스 그룹 삭제 시 모든 리소스가 영구 삭제됩니다. 복구 불가능합니다.
-
-
-
 ## 🔄 모델 변경하기
 
 프로젝트는 **환경변수 중심 설계**로 코드 수정 없이 모델을 변경할 수 있습니다.
@@ -701,6 +685,22 @@ model_capacity = 50            # TPM 용량
 - 향상된 안전성 (Jailbreak 방어 84/100)
 
 > **📘 상세 가이드**: [MODEL_CHANGE_GUIDE.md](./MODEL_CHANGE_GUIDE.md) 참조
+
+---
+
+## 🧹 리소스 정리 (Cleanup)
+
+실습 완료 후 비용 절감을 위해 리소스를 정리하세요:
+
+```bash
+# config.json에서 리소스 그룹 이름 확인
+cat config.json | grep resource_group
+
+# 리소스 그룹 전체 삭제 (권장)
+az group delete --name <resource-group-name> --yes --no-wait
+```
+
+> ⚠️ 리소스 그룹 삭제 시 모든 리소스가 영구 삭제됩니다. 복구 불가능합니다.
 
 ---
 
