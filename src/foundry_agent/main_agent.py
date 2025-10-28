@@ -99,12 +99,13 @@ Always choose the right agent(s) based on the user's question and provide well-s
         """Get the agent ID."""
         return self.agent_id
 
-    async def run(self, message: str) -> str:
+    async def run(self, message: str, thread_id: Optional[str] = None) -> str:
         """
         Run the main orchestrator agent with a message.
         
         Args:
             message: User message
+            thread_id: Optional thread ID for conversation continuity
             
         Returns:
             Agent response
