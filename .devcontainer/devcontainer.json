@@ -1,6 +1,6 @@
 {
   "name": "Azure AI Foundry Agent Service Lab",
-  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.12-bookworm",
   
   "features": {
     "ghcr.io/devcontainers/features/azure-cli:1": {},
@@ -14,6 +14,7 @@
       "extensions": [
         "ms-python.python",
         "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
         "ms-toolsai.jupyter",
         "ms-azuretools.azure-dev",
         "ms-azuretools.vscode-azureresourcegroups",
@@ -24,9 +25,10 @@
       "settings": {
         "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
         "python.terminal.activateEnvironment": true,
-        "python.linting.enabled": true,
-        "python.linting.pylintEnabled": false,
-        "python.formatting.provider": "black",
+        "[python]": {
+          "editor.defaultFormatter": "ms-python.black-formatter",
+          "editor.formatOnSave": true
+        },
         "files.exclude": {
           "**/__pycache__": true,
           "**/.pytest_cache": true,

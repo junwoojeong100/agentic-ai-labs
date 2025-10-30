@@ -68,12 +68,12 @@ else
         "fastapi>=0.110.0" \
         "uvicorn>=0.30.0" \
         "httpx>=0.27.0" \
+        "agent-framework>=1.0.0b251016" \
         "azure-monitor-opentelemetry>=1.6.0" \
         "azure-monitor-opentelemetry-exporter>=1.0.0b27" \
         "opentelemetry-api>=1.20.0" \
         "opentelemetry-sdk>=1.20.0" \
         "opentelemetry-instrumentation-fastapi>=0.45b0" \
-        "agent-framework[azure-ai]>=1.0.0b251007" \
         "fastmcp>=0.2.0" \
         "mcp>=1.1.0" \
         "ipykernel>=6.29.0"
