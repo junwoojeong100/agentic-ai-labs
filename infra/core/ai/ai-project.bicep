@@ -36,6 +36,9 @@ param aoaiConnectionName string
 @description('Storage account resource ID')
 param storageAccountId string
 
+@description('Storage account blob endpoint URI')
+param storageAccountTarget string
+
 param storageAccountConnectionName string
 
 @allowed([ 'Enabled', 'Disabled' ])
@@ -114,7 +117,7 @@ resource storageAccountConnection 'Microsoft.CognitiveServices/accounts/connecti
   parent: account
   properties: {
     category: 'AzureStorageAccount'
-    target: storageAccountId
+    target: storageAccountTarget
     authType: 'AAD'
     isSharedToAll: true    
     metadata: {

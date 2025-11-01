@@ -124,6 +124,7 @@ module aiFoundry './core/ai/ai-project.bicep' = {
     aiServiceName: !empty(aiServicesName) ? aiServicesName : 'aoai-${resourceToken}'
     aiProjectName: !empty(aiProjectName) ? aiProjectName : 'proj-${resourceToken}'
     storageAccountId: storage.outputs.id
+    storageAccountTarget: storage.outputs.primaryEndpoints.blob
     appInsightsId: monitoring.outputs.applicationInsightsId
     appInsightConnectionString: monitoring.outputs.applicationInsightsConnectionString
     appInsightConnectionName: 'appinsights-connection'
